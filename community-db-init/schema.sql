@@ -4,6 +4,7 @@
 CREATE TABLE IF NOT EXISTS users (
     id               INTEGER PRIMARY KEY,
     name             TEXT UNIQUE NOT NULL,
+    email            TEXT UNIQUE NOT NULL,
     password_hash    TEXT NOT NULL,
     password_salt    TEXT NOT NULL,
     kcal_per_day     REAL NOT NULL,        -- this person's daily calorie demand
