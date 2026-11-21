@@ -1,57 +1,72 @@
-const API_ITEMS_URL = "http://localhost:8000/api/items";
-const API_CALENDAR_URL = "http://localhost:8000/api/calendar";
-const USE_MOCK = true;
+const API_USERS_URL = "/api/users";
+const API_CROPS_URL = "/api/crops";
+const API_HARVESTS_URL = "/api/harvests";
+const API_PLANS_URL = "/api/plans";
 
+let communityMembers = [];
+let cropDatabase = {};
 let stockItems = [];
 let calendarEntries = [];
 let primaryDeficitNutrient = null;
 
 async function loadData() {
-  if (USE_MOCK) {
-    stockItems = [...MOCK_ITEMS];
-    calendarEntries = MOCK_CALENDAR.map(entry => ({ ...entry }));
-  } else {
-    try {
-      const [itemsRes, calRes] = await Promise.all([
-        fetch(API_ITEMS_URL),
-        fetch(API_CALENDAR_URL)
-      ]);
-      stockItems = await itemsRes.json();
-      calendarEntries = await calRes.json();
-    } catch (error) {
-      console.error("Python server error:", error);
-    }
-  }
+  try {
+    const [usersRes, cropsRes, harvestsRes, plansRes] = await Promise.all([
+      fetch(API_USERS_URL),
+      fetch(API_CROPS_URL),
+      fetch(API_HARVESTS_URL),
+      fetch(API_PLANS_URL)
+    ]);
 
-  populateFoodPresets();
-  refreshAllViews();
+    if (!usersRes.ok || !cropsRes.ok || !harvestsRes.ok || !plansRes.ok) {
+      throw new Error("One or more API endpoints returned an error.");
+    }
+
+    communityMembers = await usersRes.json();
+    const cropsList = await cropsRes.json();
+    stockItems = await harvestsRes.json();
+    calendarEntries = await plansRes.json();
+
+    cropDatabase = {};
+    cropsList.forEach(c => {
+      cropDatabase[c.name.toLowerCase()] = c;
+    });
+
+    populateFoodPresets();
+    refreshAllViews();
+  } catch (error) {
+    console.error("Failed to load data from Flask server:", error);
+  }
 }
 
 function refreshAllViews() {
   renderCards(stockItems);
-  calculateAndRenderNutrition(MOCK_COMMUNITY.members, stockItems);
+  calculateAndRenderNutrition(communityMembers, stockItems);
   renderContributorsChart(stockItems);
   renderAlmanac(calendarEntries);
   populatePlannedCropsSelect();
 }
 
+function capitalize(str) {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 /* =========================================
-   REFERENCE FOOD LOOKUP (AUTO-FILL)
+   REFERENCE CROPS FROM SQLITE (AUTO-FILL)
    ========================================= */
 function populateFoodPresets() {
   const datalist = document.getElementById("food-presets");
-  if (!datalist || typeof FOOD_DATABASE === "undefined") return;
+  if (!datalist) return;
 
-  datalist.innerHTML = Object.keys(FOOD_DATABASE)
-    .map(name => `<option value="${name}"></option>`)
+  datalist.innerHTML = Object.values(cropDatabase)
+    .map(c => `<option value="${capitalize(c.name)}"></option>`)
     .join("");
 }
 
 function findFoodReference(cropName) {
-  if (!cropName || typeof FOOD_DATABASE === "undefined") return null;
-  const target = cropName.trim().toLowerCase();
-  const matchKey = Object.keys(FOOD_DATABASE).find(k => k.toLowerCase() === target);
-  return matchKey ? { name: matchKey, ...FOOD_DATABASE[matchKey] } : null;
+  if (!cropName) return null;
+  return cropDatabase[cropName.trim().toLowerCase()] || null;
 }
 
 /* =========================================
@@ -60,6 +75,11 @@ function findFoodReference(cropName) {
 function renderCards(items) {
   const container = document.getElementById("cards-container");
   if (!container) return;
+
+  if (items.length === 0) {
+    container.innerHTML = `<p class="page-lead">No available harvests in stock yet.</p>`;
+    return;
+  }
 
   container.innerHTML = items.map((item, index) => `
     <article class="harvest-card">
@@ -92,7 +112,7 @@ function renderCards(items) {
       </div>
 
       <div class="card-footer">
-        <span>Producer: <strong>${item.author}</strong></span>
+        <span>Producer: <strong>${capitalize(item.author)}</strong></span>
         <span class="status-dispo">Available</span>
       </div>
     </article>
@@ -120,49 +140,49 @@ function renderSegmentedGauge(containerId, currentValue, totalValue, fillClass) 
 }
 
 function calculateAndRenderNutrition(members, availableItems) {
-  const reqCalories = members.reduce((acc, m) => acc + m.requiredCalories, 0);
-  const reqProtein = members.reduce((acc, m) => acc + m.requiredProtein, 0);
-  const reqFats = members.reduce((acc, m) => acc + m.requiredFats, 0);
-  const reqCarbs = members.reduce((acc, m) => acc + m.requiredCarbs, 0);
+  const reqCalories = members.reduce((acc, m) => acc + Number(m.requiredCalories || 0), 0);
+  const reqProtein = members.reduce((acc, m) => acc + Number(m.requiredProtein || 0), 0);
+  const reqFats = members.reduce((acc, m) => acc + Number(m.requiredFats || 0), 0);
+  const reqCarbs = members.reduce((acc, m) => acc + Number(m.requiredCarbs || 0), 0);
 
   const availCalories = availableItems.reduce((acc, i) => acc + Number(i.calories || 0), 0);
   const availProtein = availableItems.reduce((acc, i) => acc + Number(i.protein || 0), 0);
   const availFats = availableItems.reduce((acc, i) => acc + Number(i.fats || 0), 0);
   const availCarbs = availableItems.reduce((acc, i) => acc + Number(i.carbs || 0), 0);
 
-  document.getElementById("members-count-badge").textContent = `${members.length} members`;
-  document.getElementById("total-calories").textContent = reqCalories.toLocaleString("en-US");
-  document.getElementById("stock-calories").textContent = `${availCalories.toLocaleString("en-US")} kcal`;
+  document.getElementById("members-count-badge").textContent =
+    `${members.length} ${members.length > 1 ? "members" : "member"}`;
+  document.getElementById("total-calories").textContent = Math.round(reqCalories).toLocaleString("en-US");
+  document.getElementById("stock-calories").textContent = `${Math.round(availCalories).toLocaleString("en-US")} kcal`;
 
   const pctCalories = reqCalories > 0 ? Math.min(100, Math.round((availCalories / reqCalories) * 100)) : 0;
   document.getElementById("pct-calories").innerHTML = `<strong>${pctCalories}% covered</strong>`;
 
-  document.getElementById("stock-protein").textContent = availProtein;
-  document.getElementById("total-protein").textContent = reqProtein;
+  document.getElementById("stock-protein").textContent = Math.round(availProtein);
+  document.getElementById("total-protein").textContent = Math.round(reqProtein);
   renderSegmentedGauge("gauge-protein", availProtein, reqProtein, "filled-sage");
 
-  document.getElementById("stock-fats").textContent = availFats;
-  document.getElementById("total-fats").textContent = reqFats;
+  document.getElementById("stock-fats").textContent = Math.round(availFats);
+  document.getElementById("total-fats").textContent = Math.round(reqFats);
   renderSegmentedGauge("gauge-fats", availFats, reqFats, "filled-rust");
 
-  document.getElementById("stock-carbs").textContent = availCarbs;
-  document.getElementById("total-carbs").textContent = reqCarbs;
+  document.getElementById("stock-carbs").textContent = Math.round(availCarbs);
+  document.getElementById("total-carbs").textContent = Math.round(reqCarbs);
   renderSegmentedGauge("gauge-carbs", availCarbs, reqCarbs, "filled-ochre");
 
-  // Compute deficits & link back to Almanac priority badge
   const deficitsText = [];
   const deficientNames = [];
 
   if (availProtein < reqProtein) {
-    deficitsText.push(`${reqProtein - availProtein}g protein`);
+    deficitsText.push(`${Math.round(reqProtein - availProtein)}g protein`);
     deficientNames.push("Protein");
   }
   if (availFats < reqFats) {
-    deficitsText.push(`${reqFats - availFats}g fats`);
+    deficitsText.push(`${Math.round(reqFats - availFats)}g fats`);
     deficientNames.push("Fats");
   }
   if (availCarbs < reqCarbs) {
-    deficitsText.push(`${reqCarbs - availCarbs}g carbs`);
+    deficitsText.push(`${Math.round(reqCarbs - availCarbs)}g carbs`);
     deficientNames.push("Carbs");
   }
 
@@ -202,7 +222,8 @@ function renderContributorsChart(availableItems) {
 
   availableItems.forEach(item => {
     const kcal = Number(item.calories || 0);
-    byAuthor[item.author] = (byAuthor[item.author] || 0) + kcal;
+    const key = capitalize(item.author);
+    byAuthor[key] = (byAuthor[key] || 0) + kcal;
     totalCalories += kcal;
   });
 
@@ -287,7 +308,7 @@ function getMonthPhase(month, sowMonth, harvestMonth) {
 }
 
 function getNutrientPillClass(nutrient) {
-  const key = nutrient.toLowerCase();
+  const key = (nutrient || "").toLowerCase();
   if (key === "protein") return "pill-protein";
   if (key === "carbs") return "pill-carbs";
   if (key === "fats") return "pill-fats";
@@ -311,7 +332,6 @@ function renderAlmanac(entries) {
     return;
   }
 
-  // Show active crops first, harvested (greyed-out) rows at the bottom
   const sortedEntries = [...entries].sort((a, b) => Number(a.harvested) - Number(b.harvested));
 
   rowsContainer.innerHTML = sortedEntries.map(entry => {
@@ -340,7 +360,7 @@ function renderAlmanac(entries) {
             ${stampHtml}
           </div>
           <div class="almanac-crop-meta">
-            <span>${entry.member}</span>
+            <span>${capitalize(entry.member)}</span>
             <span>•</span>
             <span class="nutrient-pill ${getNutrientPillClass(entry.nutrient)}">${entry.nutrient}</span>
             <span>•</span>
@@ -367,12 +387,12 @@ function populatePlannedCropsSelect() {
   const activeCrops = calendarEntries.filter(e => !e.harvested);
   select.innerHTML = `<option value="">— Standalone / Unplanned harvest —</option>` +
     activeCrops.map(e => `
-      <option value="${e.id}">${e.crop} — ${e.member} (est. ${e.estimatedKg} kg)</option>
+      <option value="${e.id}">${e.crop} — ${capitalize(e.member)} (est. ${e.estimatedKg} kg)</option>
     `).join("");
 }
 
 /* =========================================
-   FORMS & INTERACTIVITY (POST-READY)
+   FORMS & API POST HANDLERS
    ========================================= */
 function openHarvestForm() {
   const almanacSection = document.getElementById("page-almanac");
@@ -395,13 +415,11 @@ function setupForms() {
   const harvestPanel = document.getElementById("harvest-form-panel");
   const harvestForm = document.getElementById("harvest-form");
 
-  // Toggle Plan a Crop panel
   if (toggleCropBtn && cropPanel) {
     toggleCropBtn.addEventListener("click", () => {
       if (harvestPanel) harvestPanel.classList.add("is-hidden");
       cropPanel.classList.toggle("is-hidden");
 
-      // Pre-select the top deficient nutrient when opening the form
       if (!cropPanel.classList.contains("is-hidden") && primaryDeficitNutrient) {
         const nutrientSelect = document.getElementById("crop-nutrient");
         if (nutrientSelect) nutrientSelect.value = primaryDeficitNutrient;
@@ -416,7 +434,6 @@ function setupForms() {
     });
   }
 
-  // Toggle Declare a Harvest panel
   if (toggleHarvestBtn && harvestPanel) {
     toggleHarvestBtn.addEventListener("click", () => {
       if (cropPanel) cropPanel.classList.add("is-hidden");
@@ -431,7 +448,6 @@ function setupForms() {
     });
   }
 
-  // Auto-calculate macros when crop or weight changes
   const cropInput = document.getElementById("harvest-crop");
   const kgInput = document.getElementById("harvest-kg");
   const categorySelect = document.getElementById("harvest-category");
@@ -447,22 +463,20 @@ function setupForms() {
     const kg = parseFloat(kgInput.value);
 
     if (ref && !isNaN(kg) && kg > 0) {
-      categorySelect.value = ref.category;
       calInput.value = Math.round(ref.kcalPerKg * kg);
       protInput.value = Math.round(ref.proteinPerKg * kg);
       fatsInput.value = Math.round(ref.fatsPerKg * kg);
       carbsInput.value = Math.round(ref.carbsPerKg * kg);
-      calcHint.textContent = `Auto-calculated for ${kg} kg of ${ref.name} from reference table (editable).`;
+      calcHint.textContent = `Auto-calculated from SQLite crops table for ${kg} kg of ${capitalize(ref.name)} (shelf life: ${ref.shelfLifeDays} days).`;
       calcHint.classList.add("is-auto");
     } else if (ref) {
-      categorySelect.value = ref.category;
-      calcHint.textContent = `Matched "${ref.name}" — enter quantity in kg to calculate macros.`;
+      calcHint.textContent = `Matched "${capitalize(ref.name)}" in DB — enter quantity in kg to calculate macros.`;
       calcHint.classList.remove("is-auto");
     } else if (cropInput.value.trim().length > 0) {
-      calcHint.textContent = "Custom crop — enter calories, protein, fats and carbs manually.";
+      calcHint.textContent = "New custom crop — enter calories, protein, fats and carbs manually (it will be added to DB).";
       calcHint.classList.remove("is-auto");
     } else {
-      calcHint.textContent = "Pick a known crop and enter weight (kg) to auto-fill nutritional values. All fields remain editable.";
+      calcHint.textContent = "Pick a crop from the DB and enter weight (kg) to auto-fill nutritional values. All fields remain editable.";
       calcHint.classList.remove("is-auto");
     }
   }
@@ -472,7 +486,6 @@ function setupForms() {
     kgInput.addEventListener("input", updateAutoCalculatedMacros);
   }
 
-  // Pre-fill harvest form when linking a planned crop from the almanac
   if (calendarLinkSelect) {
     calendarLinkSelect.addEventListener("change", () => {
       const selectedId = parseInt(calendarLinkSelect.value, 10);
@@ -481,72 +494,58 @@ function setupForms() {
       const planned = calendarEntries.find(e => e.id === selectedId);
       if (!planned) return;
 
-      document.getElementById("harvest-member").value = planned.member;
+      document.getElementById("harvest-member").value = capitalize(planned.member);
       cropInput.value = planned.crop;
       kgInput.value = planned.estimatedKg;
       updateAutoCalculatedMacros();
     });
   }
 
-  // Submit 1: Plan a Crop (POST /api/calendar)
+  // POST /api/plans
   if (cropForm) {
     cropForm.addEventListener("submit", async (event) => {
       event.preventDefault();
 
-      const newEntry = {
+      const payload = {
         member: document.getElementById("crop-member").value.trim(),
         crop: document.getElementById("crop-name").value.trim(),
         nutrient: document.getElementById("crop-nutrient").value,
         estimatedKg: parseFloat(document.getElementById("crop-kg").value),
         sowMonth: parseInt(document.getElementById("crop-sow").value, 10),
-        harvestMonth: parseInt(document.getElementById("crop-harvest").value, 10),
-        harvested: false,
-        harvestedKg: null
+        harvestMonth: parseInt(document.getElementById("crop-harvest").value, 10)
       };
 
-      if (USE_MOCK) {
-        newEntry.id = Date.now();
-        calendarEntries.push(newEntry);
-        refreshAllViews();
-      } else {
-        try {
-          const response = await fetch(API_CALENDAR_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newEntry)
-          });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const savedEntry = await response.json();
-          calendarEntries.push(savedEntry);
-          refreshAllViews();
-        } catch (error) {
-          console.error("Failed to save crop plan:", error);
-          alert("Could not send crop plan to the Python server.");
-          return;
-        }
-      }
+      try {
+        const response = await fetch(API_PLANS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-      cropForm.reset();
-      cropPanel.classList.add("is-hidden");
+        cropForm.reset();
+        cropPanel.classList.add("is-hidden");
+        await loadData();
+      } catch (error) {
+        console.error("Failed to save crop plan:", error);
+        alert("Could not save crop plan to the server.");
+      }
     });
   }
 
-  // Submit 2: Declare a Harvest (POST /api/items)
+  // POST /api/harvests
   if (harvestForm) {
     harvestForm.addEventListener("submit", async (event) => {
       event.preventDefault();
 
       const linkedIdRaw = calendarLinkSelect.value;
       const calendarId = linkedIdRaw ? parseInt(linkedIdRaw, 10) : null;
-      const cropName = cropInput.value.trim();
-      const kg = parseFloat(kgInput.value);
 
-      const newHarvest = {
-        title: `${kg} kg of ${cropName}`,
-        category: categorySelect.value,
+      const payload = {
         author: document.getElementById("harvest-member").value.trim(),
-        distance: document.getElementById("harvest-distance").value.trim() || "150m",
-        kg: kg,
+        crop: cropInput.value.trim(),
+        category: categorySelect.value,
+        kg: parseFloat(kgInput.value),
         calories: parseInt(calInput.value, 10) || 0,
         protein: parseInt(protInput.value, 10) || 0,
         fats: parseInt(fatsInput.value, 10) || 0,
@@ -554,48 +553,23 @@ function setupForms() {
         calendarId: calendarId
       };
 
-      if (USE_MOCK) {
-        newHarvest.id = Date.now();
-        stockItems.unshift(newHarvest);
+      try {
+        const response = await fetch(API_HARVESTS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-        if (calendarId) {
-          const planned = calendarEntries.find(e => e.id === calendarId);
-          if (planned) {
-            planned.harvested = true;
-            planned.harvestedKg = kg;
-          }
-        }
-        refreshAllViews();
-      } else {
-        try {
-          const response = await fetch(API_ITEMS_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newHarvest)
-          });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const savedItem = await response.json();
-          stockItems.unshift(savedItem);
-
-          if (calendarId) {
-            const planned = calendarEntries.find(e => e.id === calendarId);
-            if (planned) {
-              planned.harvested = true;
-              planned.harvestedKg = kg;
-            }
-          }
-          refreshAllViews();
-        } catch (error) {
-          console.error("Failed to save harvest:", error);
-          alert("Could not send harvest to the Python server.");
-          return;
-        }
+        harvestForm.reset();
+        calcHint.textContent = "Pick a crop from the DB and enter weight (kg) to auto-fill nutritional values. All fields remain editable.";
+        calcHint.classList.remove("is-auto");
+        harvestPanel.classList.add("is-hidden");
+        await loadData();
+      } catch (error) {
+        console.error("Failed to save harvest:", error);
+        alert("Could not save harvest to the server.");
       }
-
-      harvestForm.reset();
-      calcHint.textContent = "Pick a known crop and enter weight (kg) to auto-fill nutritional values. All fields remain editable.";
-      calcHint.classList.remove("is-auto");
-      harvestPanel.classList.add("is-hidden");
     });
   }
 }
