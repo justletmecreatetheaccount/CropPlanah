@@ -79,6 +79,31 @@ def login():
     )
     return response
 
+@app.route("/api/logout", methods=["POST"])
+def logout():
+    connection = open_db()
+    data = request.get_json()            # {"name": "marie", "password": "..."}
+    user = get_user_by_email(connection, data["email"])
+    if user is None or not secrets.compare_digest(
+        hash_password(data["password"], bytes.fromhex(user["password_salt"])),
+        user["password_hash"],
+    ):
+        return jsonify({"error": "invalid name or password"}), 401
+
+    token = secrets.token_hex(32)
+    create_session(connection, token, user["id"], 1)
+
+    connection.close()
+
+    response = make_response(jsonify({"ok": True}))
+    response.set_cookie(
+        "session", token,
+        httponly=True,     # JavaScript can't read it -> XSS can't steal it
+        samesite="Lax",    # not sent along on cross-site requests -> CSRF protection
+        max_age=14 * 24 * 3600,
+    )
+    return response
+
 @app.route("/api/signup", methods=["POST"])
 def signin():
     connection = open_db()
@@ -167,7 +192,55 @@ def region_page():
 
     connection.close()
     return names
+#
+# OMEGA DEBUG
+# 
+SECRET_COLUMNS = {"password_hash", "password_salt", "token"}
 
+@app.route("/db")
+def db_dump():
+    connection = open_db()
+    table_names = [
+        "users", "sessions", "crops", "asked_crops",
+        "harvests", "plans", "events", "outbreak_reports",
+    ]
+    sections = []
+
+    for table in table_names:
+        try:
+            rows = connection.execute(f"SELECT * FROM {table}").fetchall()
+        except sqlite3.OperationalError:
+            continue  # table not created yet
+        if not rows:
+            continue
+
+        columns = rows[0].keys()
+        html = [
+            f"<h2>{table} ({len(rows)})</h2>",
+            "<table border='1' cellpadding='4' cellspacing='0'>",
+            "<tr>" + "".join(f"<th>{c}</th>" for c in columns) + "</tr>",
+        ]
+        for row in rows:
+            html.append("<tr>")
+            for column in columns:
+                value = row[column]
+                if column in SECRET_COLUMNS and value:
+                    value = "***"
+                elif value is None:
+                    value = "NULL"
+                html.append(f"<td>{value}</td>")
+            html.append("</tr>")
+        html.append("</table>")
+        sections.append("\n".join(html))
+
+    connection.close()
+
+    body = "<h1>Database dump</h1>"
+    if sections:
+        body += "\n".join(sections)
+    else:
+        body += "<p>Every table is empty (or missing).</p>"
+    return body
 
 app.run()
 
