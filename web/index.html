@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Référencement (SEO) & Métadonnées -->
+  <title>Almanach — Garde-manger communautaire & autosuffisance alimentaire</title>
+  <meta name="description" content="Registre vivrier collaboratif : partage des récoltes de quartier, suivi en temps réel des stocks alimentaires et couverture des besoins nutritionnels (calories, protéines, lipides, glucides) de la communauté.">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph (Partage réseaux & présentation) -->
+  <meta property="og:title" content="Almanach — Garde-manger communautaire">
+  <meta property="og:description" content="Inventaire en temps réel des récoltes locales et suivi de l'autosuffisance nutritionnelle du collectif.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="fr_FR">
+
+  <!-- Polices typographiques -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,600;6..72,700&display=swap" rel="stylesheet">
+  
+  <!-- Feuille de style principale -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Icônes Lucide -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- Navigation principale -->
+  <nav class="navbar" aria-label="Navigation principale">
+    <div class="container navbar-inner">
+      <div class="brand">
+        <span class="brand-dot" aria-hidden="true"></span>
+        <span class="brand-title">Almanach — Quartier Sud</span>
+        <span class="brand-subtitle">Registre vivrier</span>
+      </div>
+      <button type="button" onclick="ouvrirModal()" class="btn-primary">
+        <i data-lucide="plus" class="icon-sm" aria-hidden="true"></i>
+        <span>Déclarer un surplus</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Contenu principal -->
+  <main class="container main-content">
+    
+    <!-- En-tête éditorial -->
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">01 / Stocks partagés</p>
+        <h1 class="page-title">Garde-manger de quartier</h1>
+      </div>
+      <p class="page-lead">
+        Inventaire en temps réel des récoltes disponibles et suivi de couverture nutritionnelle du collectif.
+      </p>
+    </header>
+
+    <!-- Grille des fiches récoltes -->
+    <section aria-label="Récoltes disponibles">
+      <div id="cards-container" class="cards-grid">
+        <!-- Injecté par app.js -->
+      </div>
+    </section>
+
+    <!-- Section Nutrition Communautaire (subdivisée en 3) -->
+    <section id="page-nutrition" class="nutrition-section" aria-labelledby="titre-nutrition">
+      <div class="section-header">
+        <p class="eyebrow">02 / Bilan journalier</p>
+        <h2 id="titre-nutrition" class="section-title">Autosuffisance &amp; Nutrition</h2>
+      </div>
+
+      <div class="nutrition-grid">
+        
+        <!-- PARTIE 1 : Compteur Calories + 3 Jauges à segments -->
+        <article class="nutrition-card" aria-label="Bilan calorique et macronutriments">
+          
+          <!-- Sous-bloc A : Compteur de calories -->
+          <div>
+            <div class="card-top-bar">
+              <span class="card-top-label">
+                <i data-lucide="flame" class="icon-sm text-rust" aria-hidden="true"></i>
+                Énergie / Jour
+              </span>
+              <span id="nb-membres-badge" class="members-badge">0 membres</span>
+            </div>
+
+            <div class="calories-display">
+              <span id="total-calories" class="calories-number">0</span>
+              <span class="calories-unit">kcal requises</span>
+            </div>
+
+            <div class="calories-stock-box">
+              <span>Stock : <strong id="stock-calories">0 kcal</strong></span>
+              <span id="pct-calories" class="text-sage"><strong>0%</strong></span>
+            </div>
+          </div>
+
+          <!-- Sous-bloc B : 3 Jauges à segments -->
+          <div class="gauges-wrapper">
+            
+            <!-- 1. Protéines -->
+            <div>
+              <div class="gauge-header">
+                <span class="gauge-name">
+                  <span class="legend-square bg-sage" aria-hidden="true"></span> PROTÉINES
+                </span>
+                <span class="gauge-values">
+                  <strong id="stock-proteines">0</strong>g / <span id="total-proteines">0</span>g
+                </span>
+              </div>
+              <div id="jauge-proteines" class="gauge-track" role="progressbar" aria-label="Couverture en protéines"></div>
+            </div>
+
+            <!-- 2. Lipides -->
+            <div>
+              <div class="gauge-header">
+                <span class="gauge-name">
+                  <span class="legend-square bg-rust" aria-hidden="true"></span> LIPIDES
+                </span>
+                <span class="gauge-values">
+                  <strong id="stock-lipides">0</strong>g / <span id="total-lipides">0</span>g
+                </span>
+              </div>
+              <div id="jauge-lipides" class="gauge-track" role="progressbar" aria-label="Couverture en lipides"></div>
+            </div>
+
+            <!-- 3. Glucides -->
+            <div>
+              <div class="gauge-header">
+                <span class="gauge-name">
+                  <span class="legend-square bg-ochre" aria-hidden="true"></span> GLUCIDES
+                </span>
+                <span class="gauge-values">
+                  <strong id="stock-glucides">0</strong>g / <span id="total-glucides">0</span>g
+                </span>
+              </div>
+              <div id="jauge-glucides" class="gauge-track" role="progressbar" aria-label="Couverture en glucides"></div>
+            </div>
+
+          </div>
+
+          <p id="statut-macros" class="macros-status">
+            Calcul des apports en cours...
+          </p>
+        </article>
+
+        <!-- PARTIE 2 : Emplacement libre -->
+        <div class="placeholder-zone">
+          <span class="zone-tag">[ Zone 02 ]</span>
+          <h3 class="zone-title">Subdivision 2</h3>
+          <p class="zone-desc">Disponible pour la suite</p>
+        </div>
+
+        <!-- PARTIE 3 : Emplacement libre -->
+        <div class="placeholder-zone">
+          <span class="zone-tag">[ Zone 03 ]</span>
+          <h3 class="zone-title">Subdivision 3</h3>
+          <p class="zone-desc">Disponible pour la suite</p>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>Almanach Vivrier — Réseau local d'entraide alimentaire</span>
+      <span>Données communautaires synchronisées</span>
+    </div>
+  </footer>
+
+  <script src="mock.js"></script>
+  <script src="app.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
