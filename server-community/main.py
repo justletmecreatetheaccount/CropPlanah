@@ -59,15 +59,6 @@ def main_page():
 def login_page():
     return send_from_directory("web/login", "index.html")
 
-@app.route('/web/login/signin.js')
-def login_page_1():
-    return send_from_directory("web/login", "signin.js")
-
-@app.route('/web/login/signin.css')
-def login_page_2():
-    return send_from_directory("web/login", "signin.css")
-    
-
 @app.route('/region')
 def region_page():
     connection = sqlite3.connect(DB_PATH)
