@@ -273,7 +273,13 @@ def login_page():
 
 @app.route('/community')
 def community_page():
-    return send_from_directory("web/community/", "index.html")
+    connection = open_db()
+    user = current_user(connection)
+    connection.close()
+    if user :
+        return send_from_directory("web/community/", "index.html")
+    else:
+        return redirect("/login")
     # return send_from_directory(WEB_DIR, "index.html")
 
 
