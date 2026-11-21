@@ -1,5 +1,5 @@
 /* =========================================
-   VARIABLES & PALETTE (ENCRE ROUILLE FONCÉE)
+   VARIABLES & PALETTE (DARK RUST INK)
    ========================================= */
 :root {
   --paper: #ECE9DF;
@@ -17,7 +17,7 @@
 }
 
 /* =========================================
-   BASE & TRAME PAPIER MILLIMÉTRÉ
+   BASE & GRAPH PAPER TEXTURE
    ========================================= */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -51,7 +51,7 @@ body {
 }
 
 /* =========================================
-   BARRE DE NAVIGATION (REGISTRE)
+   NAVIGATION BAR (REGISTRY)
    ========================================= */
 .navbar {
   position: sticky;
@@ -125,7 +125,7 @@ body {
 }
 
 /* =========================================
-   EN-TÊTE ÉDITORIAL & SECTIONS
+   EDITORIAL HEADER & SECTIONS
    ========================================= */
 .main-content {
   padding-top: 2.5rem;
@@ -169,7 +169,7 @@ body {
 }
 
 /* =========================================
-   GRILLE DES FICHES RÉCOLTES
+   HARVEST CARDS GRID
    ========================================= */
 .cards-grid {
   display: grid;
@@ -260,7 +260,7 @@ body {
   border-top: 1px solid rgba(68, 28, 17, 0.18);
 }
 
-.status-dispo {
+.status-available {
   color: var(--sky);
   font-weight: 600;
   text-decoration: underline;
@@ -268,7 +268,7 @@ body {
 }
 
 /* =========================================
-   SECTION NUTRITION (SUBDIVISÉE EN 3)
+   NUTRITION SECTION (SPLIT INTO 3)
    ========================================= */
 .nutrition-section {
   margin-top: 3.5rem;
@@ -365,7 +365,7 @@ body {
   padding: 0.6rem 0.75rem;
 }
 
-/* Jauges en bâtonnets rectangulaires */
+/* Rectangular segment gauges */
 .gauges-wrapper {
   margin-top: 1.5rem;
   padding-top: 1.25rem;
@@ -453,7 +453,7 @@ body {
   font-weight: 600;
 }
 
-/* Zones libres 2 et 3 */
+/* Free slots 2 and 3 */
 .placeholder-zone {
   background-color: rgba(248, 246, 240, 0.65);
   border: 1px dashed rgba(68, 28, 17, 0.45);
@@ -491,7 +491,7 @@ body {
 }
 
 /* =========================================
-   PIED DE PAGE
+   FOOTER
    ========================================= */
 .site-footer {
   border-top: 1px solid rgba(68, 28, 17, 0.25);
@@ -509,7 +509,7 @@ body {
 }
 
 /* =========================================
-   RESPONSIVE (MOBILE & TABLETTE)
+   RESPONSIVE (MOBILE & TABLET)
    ========================================= */
 @media (max-width: 900px) {
   .cards-grid,

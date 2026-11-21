@@ -1,47 +1,47 @@
-// Récoltes et surplus alimentaires disponibles dans la communauté
+// Harvests and food surpluses available in the community
 const MOCK_ITEMS = [
   {
     id: 1,
-    titre: "1,2 kg de lentilles vertes",
-    categorie: "Légumineuses",
-    auteur: "Lina",
+    title: "1.2 kg of green lentils",
+    category: "Pulses",
+    producer: "Lina",
     distance: "200m",
     calories: 4000,
-    proteines: 290,
-    glucides: 680,
-    lipides: 18
+    protein: 290,
+    carbs: 680,
+    fats: 18
   },
   {
     id: 2,
-    titre: "4 kg de courges & pommes de terre",
-    categorie: "Légumes",
-    auteur: "Marc",
+    title: "4 kg of squash & potatoes",
+    category: "Vegetables",
+    producer: "Marc",
     distance: "350m",
     calories: 2800,
-    proteines: 55,
-    glucides: 620,
-    lipides: 10
+    protein: 55,
+    carbs: 620,
+    fats: 10
   },
   {
     id: 3,
-    titre: "500 g de noix & graines de tournesol",
-    categorie: "Fruits & Noix",
-    auteur: "Sami",
+    title: "500 g of walnuts & sunflower seeds",
+    category: "Fruits & Nuts",
+    producer: "Sami",
     distance: "150m",
     calories: 3100,
-    proteines: 95,
-    glucides: 70,
-    lipides: 275
+    protein: 95,
+    carbs: 70,
+    fats: 275
   }
 ];
 
-// Besoins nutritionnels journaliers de chaque membre
-const MOCK_COMMUNAUTE = {
-  membres: [
-    { nom: "Lina", caloriesRequises: 2100, proteinesRequises: 65, glucidesRequises: 260, lipidesRequises: 70 },
-    { nom: "Marc", caloriesRequises: 2500, proteinesRequises: 85, glucidesRequises: 310, lipidesRequises: 85 },
-    { nom: "Sami", caloriesRequises: 2300, proteinesRequises: 75, glucidesRequises: 280, lipidesRequises: 75 },
-    { nom: "Nadia", caloriesRequises: 1950, proteinesRequises: 60, glucidesRequises: 240, lipidesRequises: 65 },
-    { nom: "Yanis", caloriesRequises: 2600, proteinesRequises: 90, glucidesRequises: 320, lipidesRequises: 90 }
+// Daily nutritional requirements of each member
+const MOCK_COMMUNITY = {
+  members: [
+    { name: "Lina", requiredCalories: 2100, requiredProtein: 65, requiredCarbs: 260, requiredFats: 70 },
+    { name: "Marc", requiredCalories: 2500, requiredProtein: 85, requiredCarbs: 310, requiredFats: 85 },
+    { name: "Sami", requiredCalories: 2300, requiredProtein: 75, requiredCarbs: 280, requiredFats: 75 },
+    { name: "Nadia", requiredCalories: 1950, requiredProtein: 60, requiredCarbs: 240, requiredFats: 65 },
+    { name: "Yanis", requiredCalories: 2600, requiredProtein: 90, requiredCarbs: 320, requiredFats: 90 }
   ]
 };
