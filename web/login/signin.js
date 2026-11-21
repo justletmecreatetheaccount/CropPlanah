@@ -14,20 +14,37 @@
    ========================================= */
 
 const SIGNUP_FIELDS = [
-  { name: "name", label: "Full name", type: "text", required: true, placeholder: "Lina Devos" },
-  { name: "email", label: "Email", type: "email", required: true, placeholder: "lina@solvine.mesh" },
-  { name: "password", label: "Password", type: "password", required: true, hint: "min. 8 characters" },
   {
-    name: "address", label: "Address", type: "text", required: true,
-    placeholder: "Rue du Chien 4, 1070 Brussels"
+    name: "name",
+    label: "Full name",
+    type: "text",
+    required: true,
+    placeholder: "Lina Devos",
   },
-  { name: "plot", label: "Garden plot size", type: "number", unit:"m^2", placeholder: "13", hint: "leave empty if you don't produce anything" },
   {
-    name: "calories", label: "Personal calories requirements", type: "number",
-    unit: "kcal/day", min: 1200, max: 5000, required: true,
-    hint: "feeds the nutrition ledger, adjust it whenever"
+    name: "email",
+    label: "Email",
+    type: "email",
+    required: true,
+    placeholder: "lina@solvine.mesh",
   },
-
+  {
+    name: "password",
+    label: "Password",
+    type: "password",
+    required: true,
+    hint: "min. 8 characters",
+  },
+  {
+    name: "kcal",
+    label: "Personal calories requirements",
+    type: "number",
+    unit: "kcal/day",
+    min: 1200,
+    max: 5000,
+    required: true,
+    hint: "feeds the nutrition ledger, adjust it whenever",
+  },
 ];
 
 /* =========================================
@@ -133,7 +150,7 @@ signupStatus.className = "form-status";
 signupStatus.hidden = true;
 signupForm.appendChild(signupStatus);
 
-signupForm.addEventListener("submit", (ev) => {
+signupForm.addEventListener("submit", async (ev) => {
   ev.preventDefault();
   const { values, missing } = readValues(signupForm, SIGNUP_FIELDS);
 
@@ -142,20 +159,52 @@ signupForm.addEventListener("submit", (ev) => {
     return;
   }
 
-  const calories = values.calories ? `${values.calories} kcal/day` : "no target yet";
-  showStatus(signupStatus,
-    `Welcome, ${values.name}. Plot ${values.plot || "to be assigned"}, ${calories}. ` +
-    `No server is wired to this page yet - the values stayed right here in this form.`,
-    true);
+  const response = await fetch("/api/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: values.name,
+      email: values.email,
+      password: values.password,
+      kcal_per_day: values.kcal,
+    }),
+  });
+
+  if (response.ok) {
+    window.location = "/community"; // signup endpoint logs you in too
+  } else {
+    const data = await response.json();
+    showStatus(signupStatus, data.error, false);
+  }
 });
+
+// signupForm.addEventListener("submit", (ev) => {
+//   ev.preventDefault();
+//   const { values, missing } = readValues(signupForm, SIGNUP_FIELDS);
+
+//   if (missing.length > 0) {
+//     showStatus(signupStatus, `Missing: ${missing.join(" / ")}.`, false);
+//     return;
+//   }
+
+//   const calories = values.calories
+//     ? `${values.calories} kcal/day`
+//     : "no target yet";
+//   showStatus(
+//     signupStatus,
+//     `Welcome, ${values.name}. Plot ${values.plot || "to be assigned"}, ${calories}. ` +
+//       `No server is wired to this page yet - the values stayed right here in this form.`,
+//     true,
+//   );
+// });
 
 // login form: static in the HTML, simple check
 const loginForm = document.getElementById("login-form");
 const loginStatus = document.getElementById("login-status");
 
-loginForm.addEventListener("submit", (ev) => {
+loginForm.addEventListener("submit", async (ev) => {
   ev.preventDefault();
-  const { missing } = readValues(loginForm, [
+  const { values, missing } = readValues(loginForm, [
     { name: "email", label: "Email", required: true },
     { name: "password", label: "Password", required: true },
   ]);
@@ -165,7 +214,35 @@ loginForm.addEventListener("submit", (ev) => {
     return;
   }
 
-  showStatus(loginStatus,
-    "Handshake received. No server is wired to this page yet - hook it to the node root.",
-    true);
+  const response = await fetch("/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: values.email, password: values.password }),
+  });
+
+  if (response.ok) {
+    window.location = "/community"; // cookie rides along automatically
+  } else {
+    const data = await response.json();
+    showStatus(loginStatus, data.error, false);
+  }
 });
+
+// loginForm.addEventListener("submit", (ev) => {
+//   ev.preventDefault();
+//   const { missing } = readValues(loginForm, [
+//     { name: "email", label: "Email", required: true },
+//     { name: "password", label: "Password", required: true },
+//   ]);
+
+//   if (missing.length > 0) {
+//     showStatus(loginStatus, `Missing: ${missing.join(" / ")}.`, false);
+//     return;
+//   }
+
+//   showStatus(
+//     loginStatus,
+//     "Handshake received. No server is wired to this page yet - hook it to the node root.",
+//     true,
+//   );
+// });

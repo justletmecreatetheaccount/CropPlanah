@@ -34,10 +34,10 @@ with open("schema.sql") as f:
 # --- one user: marie, admin, demanding 2200 kcal/day ---
 salt = secrets.token_bytes(16)
 connection.execute(
-    "INSERT INTO users (name, email, password_hash, password_salt, "
+    "INSERT INTO users (name, email, password_hash, password_salt, plot_size, "
     "kcal_per_day, glucid_g_per_day, protein_g_per_day, lipid_g_per_day, "
-    "is_admin, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    ("marie", "marie@wizard.mail", hash_password(PASSWORD, salt), salt.hex(),
+    "is_admin, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    ("marie", "marie@wizard.mail", hash_password(PASSWORD, salt), salt.hex(), 10,
      2200, 250, 60, 70, 1, date.today().isoformat()),
 )
 
