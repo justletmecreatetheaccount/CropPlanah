@@ -52,7 +52,7 @@ function setOverlay(name) {
     overlays.rain.stations.forEach((s) => {
       L.circleMarker([s.lat, s.lng], {
         radius: 6 + s.value * 5,
-        color: "#77b0ff", weight: 1.5, fillColor: "#77b0ff", fillOpacity: 0.45,
+        color: "#4a8db0", weight: 1.5, fillColor: "#4a8db0", fillOpacity: 0.45,
       }).bindPopup(stationPopup(s, "rain", s.value, overlays.rain.unit)).addTo(layer);
     });
   }
@@ -81,16 +81,16 @@ function setOverlay(name) {
   }
 
   if (name === "diseases") {
-    const colors = { high: "#ff7d92", medium: "#ffc46b", low: "#77e0ff" };
+    const colors = { high: "#a65638", medium: "#dfb548", low: "#5a7432" };
     overlays.diseases.outbreaks.forEach((o) => {
-      const c = colors[o.severity] || "#77e0ff";
+      const c = colors[o.severity] || "#4a8db0";
       L.circle([o.lat, o.lng], {
         radius: o.radius_m, color: c, weight: 1, dashArray: "4 6",
         fillColor: c, fillOpacity: 0.15,
       }).bindPopup(`<div class="station-popup"><strong>${o.name}</strong> <em>(${o.latin})</em><br>
         severity: ${o.severity}<br>crops: ${o.crops.join(", ")}</div>`).addTo(layer);
       L.circleMarker([o.lat, o.lng], {
-        radius: 5, color: c, fillColor: "#1c1230", fillOpacity: 1, weight: 2,
+        radius: 5, color: c, fillColor: "#f8f6f0", fillOpacity: 1, weight: 2,
       }).bindTooltip(`${o.name} (${o.severity})`).addTo(layer);
     });
   }
@@ -99,10 +99,10 @@ function setOverlay(name) {
   currentLayer = layer;
 }
 
-// cold teal to warm magenta
+// cold sky to warm rust
 function tempColor(t) {
   const k = Math.min(Math.max((t - 5) / 8, 0), 1);
-  return `rgb(${Math.round(90 + k * 165)},${Math.round(224 - k * 130)},${Math.round(255 - k * 55)})`;
+  return `rgb(${Math.round(74 + k * 92)},${Math.round(141 - k * 55)},${Math.round(176 - k * 120)})`;
 }
 
 /* ============ warnings ============ */
