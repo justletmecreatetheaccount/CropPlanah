@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solvine Commons // garden mesh</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <!-- point this at your community page -->
+    <nav class="corner corner-left">
+      <a class="btn" href="community.html">&#9670; community</a>
+    </nav>
+
+    <div class="site-id">
+      <h1>SOLVINE COMMONS</h1>
+      <p class="tagline">garden mesh // node brussels-04 // runs on sunlight</p>
+    </div>
+
+    <nav class="corner corner-right">
+      <button class="btn" id="btn-profile" aria-haspopup="dialog">&#9679; profile</button>
+    </nav>
+  </header>
+
+  <dialog id="profile-card"></dialog>
+
+  <main class="board">
+    <section class="panel panel-map">
+      <h2 class="panel-title">territory</h2>
+      <div class="map-wrap">
+        <div class="overlay-picker">
+          <button type="button" class="overlay-btn active" data-overlay="none">nothing</button>
+          <button type="button" class="overlay-btn" data-overlay="rain">rain</button>
+          <button type="button" class="overlay-btn" data-overlay="diseases">plant diseases</button>
+          <button type="button" class="overlay-btn" data-overlay="wind">wind</button>
+          <button type="button" class="overlay-btn" data-overlay="temperature">temperatures</button>
+        </div>
+        <div id="map" class="map-canvas"></div>
+      </div>
+      <p class="attr">basemap (c) OpenStreetMap contributors</p>
+    </section>
+
+    <div class="board-right">
+      <section class="panel panel-warnings">
+        <h2 class="panel-title">disease warnings</h2>
+        <ul id="warnings" class="warnings"></ul>
+      </section>
+
+      <section class="panel panel-trades">
+        <h2 class="panel-title">community trading balance</h2>
+        <div class="ledger">
+          <div id="ledger-entry"></div>
+          <div class="ledger-controls">
+            <label class="visually-hidden" for="ledger-slider">ledger position</label>
+            <input type="range" id="ledger-slider" min="0" value="0" step="1">
+            <p id="ledger-position" class="ledger-position"></p>
+          </div>
+          <div class="balance-meter" aria-hidden="true">
+            <div class="balance-scale"></div>
+            <div id="balance-bar" class="balance-bar"></div>
+          </div>
+          <p id="balance-readout" class="balance-readout"></p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

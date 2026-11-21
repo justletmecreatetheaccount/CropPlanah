@@ -1,0 +1,112 @@
+{
+  "profile": {
+    "name": "Vlad D.",
+    "role": "steward, node brussels-04",
+    "plot": "P-07",
+    "energy_credits": 42,
+    "member_since": "2024-03-01",
+    "skills": ["mesh admin", "beekeeping", "greywater"]
+  },
+  "map": {
+    "center": [50.835, 4.31],
+    "zoom": 13
+  },
+  "overlays": {
+    "rain": {
+      "unit": "mm/h",
+      "stations": [
+        { "name": "canal north", "lat": 50.864, "lng": 4.352, "value": 1.2 },
+        { "name": "shed roof", "lat": 50.856, "lng": 4.308, "value": 2.4 },
+        { "name": "plot P-07", "lat": 50.829, "lng": 4.298, "value": 0.6 },
+        { "name": "orchard ridge", "lat": 50.821, "lng": 4.341, "value": 3.1 },
+        { "name": "seed barn", "lat": 50.843, "lng": 4.277, "value": 0.9 },
+        { "name": "greenhouse row", "lat": 50.834, "lng": 4.323, "value": 1.8 },
+        { "name": "compost yard", "lat": 50.848, "lng": 4.318, "value": 1.5 }
+      ]
+    },
+    "wind": {
+      "unit": "km/h",
+      "stations": [
+        { "name": "canal north", "lat": 50.864, "lng": 4.352, "speed": 14, "direction": 225 },
+        { "name": "shed roof", "lat": 50.856, "lng": 4.308, "speed": 21, "direction": 240 },
+        { "name": "plot P-07", "lat": 50.829, "lng": 4.298, "speed": 9, "direction": 210 },
+        { "name": "orchard ridge", "lat": 50.821, "lng": 4.341, "speed": 26, "direction": 250 },
+        { "name": "seed barn", "lat": 50.843, "lng": 4.277, "speed": 17, "direction": 230 },
+        { "name": "greenhouse row", "lat": 50.834, "lng": 4.323, "speed": 11, "direction": 220 },
+        { "name": "compost yard", "lat": 50.848, "lng": 4.318, "speed": 13, "direction": 235 }
+      ]
+    },
+    "temperature": {
+      "unit": "C",
+      "stations": [
+        { "name": "canal north", "lat": 50.864, "lng": 4.352, "value": 8.4 },
+        { "name": "shed roof", "lat": 50.856, "lng": 4.308, "value": 9.1 },
+        { "name": "plot P-07", "lat": 50.829, "lng": 4.298, "value": 7.6 },
+        { "name": "orchard ridge", "lat": 50.821, "lng": 4.341, "value": 6.2 },
+        { "name": "seed barn", "lat": 50.843, "lng": 4.277, "value": 7.9 },
+        { "name": "greenhouse row", "lat": 50.834, "lng": 4.323, "value": 12.3 },
+        { "name": "compost yard", "lat": 50.848, "lng": 4.318, "value": 11.0 }
+      ]
+    },
+    "diseases": {
+      "outbreaks": [
+        { "name": "late blight", "latin": "Phytophthora infestans", "lat": 50.822, "lng": 4.344, "severity": "high", "radius_m": 900, "crops": ["tomato", "potato"] },
+        { "name": "apple scab", "latin": "Venturia inaequalis", "lat": 50.851, "lng": 4.285, "severity": "medium", "radius_m": 1200, "crops": ["apple", "pear"] },
+        { "name": "powdery mildew", "latin": "Podosphaera leucotricha", "lat": 50.836, "lng": 4.326, "severity": "low", "radius_m": 400, "crops": ["apple", "squash"] }
+      ]
+    }
+  },
+  "warnings": [
+    {
+      "id": "w-031",
+      "issued_at": "2026-11-21 06:40",
+      "disease": "late blight",
+      "latin": "Phytophthora infestans",
+      "crop": "tomato and potato",
+      "model": "BlightWatch v3",
+      "risk": "high",
+      "note": "ten humid hours in a row on the ridge sensor. cut and burn haulm tonight, do not compost."
+    },
+    {
+      "id": "w-030",
+      "issued_at": "2026-11-20 21:15",
+      "disease": "apple scab",
+      "latin": "Venturia inaequalis",
+      "crop": "apple and pear",
+      "model": "Mills 2020 table",
+      "risk": "medium",
+      "note": "three ascospore infection periods this week. rake under the orchard trees before the next rain."
+    },
+    {
+      "id": "w-029",
+      "issued_at": "2026-11-19 17:02",
+      "disease": "downy mildew",
+      "latin": "Peronospora belbahrii",
+      "crop": "basil",
+      "model": "GreenCast leaf-wetness index",
+      "risk": "medium",
+      "note": "greenhouse humidity above 90% for two nights. crack the vents after sunset."
+    },
+    {
+      "id": "w-028",
+      "issued_at": "2026-11-18 08:30",
+      "disease": "black rot",
+      "latin": "Xanthomonas campestris",
+      "crop": "brassica",
+      "model": "GreenCast leaf-wetness index",
+      "risk": "low",
+      "note": "spotted on two cabbage heads near plot P-11. pull the leaves, rotate the bed."
+    }
+  ],
+  "trades": {
+    "unit": "credits",
+    "entries": [
+      { "period": "week 46", "gave": ["12 kg tomatoes", "6 jars honey"], "got": ["10 kg spelt flour", "15 seedling trays"], "balance": 18 },
+      { "period": "week 46", "gave": ["8 kg potatoes", "1 hour of battery time"], "got": ["2 loaves of bread", "5 litres cider"], "balance": -26 },
+      { "period": "week 46 (seed swap)", "gave": ["40 envelopes of kale seed"], "got": ["35 envelopes mixed seed", "1 tool-shed battery hour"], "balance": 9 },
+      { "period": "week 47", "gave": ["12 kg apples", "1 queen bee + frame"], "got": ["4 kg buckwheat", "20 kg composted manure", "1 pump repair"], "balance": 6 },
+      { "period": "week 47", "gave": ["beekeeping tutorial, 2 hours"], "got": ["6 jars of fermented cabbage", "40 m of drip line"], "balance": 22 },
+      { "period": "week 47", "gave": ["3 scion cuttings", "1 rain barrel"], "got": ["9 kg quinces"], "balance": -11 }
+    ]
+  }
+}
