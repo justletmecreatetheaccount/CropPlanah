@@ -5,30 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <!-- SEO & Metadata -->
-  <title>Almanac — Community pantry & food self-sufficiency</title>
-  <meta name="description" content="Collaborative food registry: sharing neighborhood harvests, real-time tracking of food stocks and coverage of the community's nutritional needs (calories, protein, fats, carbs).">
+  <title>Almanac — Community Pantry &amp; Food Self-Sufficiency</title>
+  <meta name="description" content="Collaborative food registry: neighborhood harvest sharing, seasonal planting almanac, and daily community nutritional tracking.">
   <meta name="robots" content="index, follow">
-  
-  <!-- Open Graph (social sharing & presentation) -->
-  <meta property="og:title" content="Almanac — Community pantry">
-  <meta property="og:description" content="Real-time inventory of local harvests and tracking of the collective's nutritional self-sufficiency.">
+  <meta property="og:title" content="Almanac — Community Pantry">
+  <meta property="og:description" content="Real-time inventory of local harvests, collective planting calendar, and nutritional tracking.">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="en_US">
+  <link rel="icon" href="data:,">
 
-  <!-- Typography -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,600;6..72,700&display=swap" rel="stylesheet">
   
-  <!-- Main stylesheet -->
+  <!-- Main Stylesheet -->
   <link rel="stylesheet" href="style.css">
 
-  <!-- Lucide icons -->
+  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
-  <!-- Main navigation -->
+  <!-- Main Navigation -->
   <nav class="navbar" aria-label="Main navigation">
     <div class="container navbar-inner">
       <div class="brand">
@@ -36,36 +35,34 @@
         <span class="brand-title">Almanac — South District</span>
         <span class="brand-subtitle">Food registry</span>
       </div>
-      <button type="button" onclick="openModal()" class="btn-primary">
-        <i data-lucide="plus" class="icon-sm" aria-hidden="true"></i>
-        <span>Declare a surplus</span>
+      <button type="button" onclick="openHarvestForm()" class="btn-primary">
+        <i data-lucide="sprout" class="icon-sm" aria-hidden="true"></i>
+        <span>Declare a harvest</span>
       </button>
     </div>
   </nav>
 
-  <!-- Main content -->
+  <!-- Main Content -->
   <main class="container main-content">
     
-    <!-- Editorial header -->
+    <!-- Editorial Header -->
     <header class="page-header">
       <div>
         <p class="eyebrow">01 / Shared stocks</p>
         <h1 class="page-title">Neighborhood pantry</h1>
       </div>
       <p class="page-lead">
-        Real-time inventory of available harvests and nutrition coverage tracking for the collective.
+        Real-time inventory of available harvests and collective nutritional coverage tracking.
       </p>
     </header>
 
-    <!-- Harvest cards grid -->
+    <!-- Harvest Cards Grid -->
     <section aria-label="Available harvests">
-      <div id="cards-container" class="cards-grid">
-        <!-- Injected by app.js -->
-      </div>
+      <div id="cards-container" class="cards-grid"></div>
     </section>
 
-    <!-- Community Nutrition section (split into 3) -->
-    <section id="nutrition-page" class="nutrition-section" aria-labelledby="nutrition-title">
+    <!-- Section 02: Nutrition (2 Asymmetric Subdivisions) -->
+    <section id="page-nutrition" class="nutrition-section" aria-labelledby="nutrition-title">
       <div class="section-header">
         <p class="eyebrow">02 / Daily report</p>
         <h2 id="nutrition-title" class="section-title">Self-sufficiency &amp; Nutrition</h2>
@@ -73,17 +70,15 @@
 
       <div class="nutrition-grid">
         
-        <!-- PART 1: Calorie counter + 3 segment gauges -->
-        <article class="nutrition-card" aria-label="Calorie and macronutrient report">
-          
-          <!-- Sub-block A: Calorie counter -->
+        <!-- SUBDIVISION 1 (Wider): Calorie Counter + 3 Segmented Gauges -->
+        <article class="nutrition-card" aria-label="Calorie balance and macronutrients">
           <div>
             <div class="card-top-bar">
               <span class="card-top-label">
                 <i data-lucide="flame" class="icon-sm text-rust" aria-hidden="true"></i>
                 Energy / Day
               </span>
-              <span id="members-badge" class="members-badge">0 members</span>
+              <span id="members-count-badge" class="members-badge">0 members</span>
             </div>
 
             <div class="calories-display">
@@ -97,9 +92,7 @@
             </div>
           </div>
 
-          <!-- Sub-block B: 3 segment gauges -->
           <div class="gauges-wrapper">
-            
             <!-- 1. Protein -->
             <div>
               <div class="gauge-header">
@@ -138,7 +131,6 @@
               </div>
               <div id="gauge-carbs" class="gauge-track" role="progressbar" aria-label="Carbs coverage"></div>
             </div>
-
           </div>
 
           <p id="macros-status" class="macros-status">
@@ -146,29 +138,266 @@
           </p>
         </article>
 
-        <!-- PART 2: Free slot -->
-        <div class="placeholder-zone">
-          <span class="zone-tag">[ Zone 02 ]</span>
-          <h3 class="zone-title">Subdivision 2</h3>
-          <p class="zone-desc">Available for what comes next</p>
-        </div>
+        <!-- SUBDIVISION 2: Contributors Pie Chart -->
+        <article class="nutrition-card" aria-label="Contribution share by member">
+          <div>
+            <div class="card-top-bar">
+              <span class="card-top-label">
+                <i data-lucide="pie-chart" class="icon-sm text-sage" aria-hidden="true"></i>
+                Share / Contributors
+              </span>
+              <span id="contributors-count-badge" class="members-badge">0 active</span>
+            </div>
 
-        <!-- PART 3: Free slot -->
-        <div class="placeholder-zone">
-          <span class="zone-tag">[ Zone 03 ]</span>
-          <h3 class="zone-title">Subdivision 3</h3>
-          <p class="zone-desc">Available for what comes next</p>
-        </div>
+            <div class="pie-wrapper">
+              <div id="pie-chart-container" class="pie-svg-box" role="img" aria-label="Pie chart of contributor shares"></div>
+            </div>
+          </div>
+
+          <div class="pie-legend-wrapper">
+            <ul id="pie-legend" class="pie-legend-list"></ul>
+            <p class="macros-status">
+              Distribution calculated from total energy (kcal) supplied.
+            </p>
+          </div>
+        </article>
 
       </div>
+    </section>
+
+    <!-- Section 03: Planting & Harvest Almanac -->
+    <section id="page-almanac" class="nutrition-section" aria-labelledby="almanac-title">
+      <div class="section-header section-header-row">
+        <div>
+          <p class="eyebrow">03 / Seasonal coordination</p>
+          <h2 id="almanac-title" class="section-title">Planting &amp; Harvest Almanac</h2>
+        </div>
+
+        <!-- Paired Action Buttons: Yellow (Sow) + Green (Harvest) -->
+        <div class="almanac-actions">
+          <button type="button" id="toggle-crop-form-btn" class="btn-ochre">
+            <i data-lucide="calendar-plus" class="icon-sm" aria-hidden="true"></i>
+            <span>Plan a crop</span>
+          </button>
+          <button type="button" id="toggle-harvest-form-btn" class="btn-primary">
+            <i data-lucide="sprout" class="icon-sm" aria-hidden="true"></i>
+            <span>Declare a harvest</span>
+          </button>
+        </div>
+      </div>
+
+      <article class="almanac-card" aria-label="Annual planting and harvest timeline">
+        
+        <!-- Top Bar, Legend & Deficit Priority -->
+        <div class="almanac-top-bar">
+          <div class="almanac-legend">
+            <span class="almanac-legend-item">
+              <span class="legend-square cell-sow" aria-hidden="true"></span> Sow (S)
+            </span>
+            <span class="almanac-legend-item">
+              <span class="legend-square cell-grow" aria-hidden="true"></span> Growing
+            </span>
+            <span class="almanac-legend-item">
+              <span class="legend-square cell-harvest" aria-hidden="true"></span> Harvest (H)
+            </span>
+          </div>
+          <div class="almanac-badges">
+            <span id="almanac-priority" class="priority-badge">Priority: —</span>
+            <span id="almanac-count-badge" class="members-badge">0 active crops</span>
+          </div>
+        </div>
+
+        <!-- PANEL A: Plan a Crop Form (Yellow theme) -->
+        <div id="crop-form-panel" class="crop-form-panel is-hidden">
+          <div class="form-panel-header">
+            <span class="legend-square cell-sow" aria-hidden="true"></span>
+            <span>Plan a new sowing</span>
+          </div>
+          <form id="crop-form" class="crop-form">
+            <div class="form-field">
+              <label for="crop-member">Member</label>
+              <input type="text" id="crop-member" name="member" placeholder="e.g. Nadia" required>
+            </div>
+
+            <div class="form-field">
+              <label for="crop-name">Crop</label>
+              <input type="text" id="crop-name" name="crop" list="food-presets" placeholder="e.g. Chickpeas" required>
+            </div>
+
+            <div class="form-field">
+              <label for="crop-nutrient">Main nutrient</label>
+              <select id="crop-nutrient" name="nutrient" required>
+                <option value="Protein">Protein</option>
+                <option value="Carbs">Carbs</option>
+                <option value="Fats">Fats</option>
+                <option value="Vitamins">Vitamins</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label for="crop-kg">Est. yield (kg)</label>
+              <input type="number" id="crop-kg" name="estimatedKg" min="0.5" step="0.5" placeholder="e.g. 5" required>
+            </div>
+
+            <div class="form-field">
+              <label for="crop-sow">Sow month</label>
+              <select id="crop-sow" name="sowMonth" required>
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4" selected>April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label for="crop-harvest">Harvest month</label>
+              <select id="crop-harvest" name="harvestMonth" required>
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8" selected>August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn-ochre">Add to almanac</button>
+              <button type="button" id="cancel-crop-form-btn" class="btn-secondary">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- PANEL B: Declare a Harvest Form (Green theme, auto-calculates macros) -->
+        <div id="harvest-form-panel" class="crop-form-panel harvest-panel is-hidden">
+          <div class="form-panel-header">
+            <span class="legend-square cell-harvest" aria-hidden="true"></span>
+            <span>Declare a harvest (updates stocks, gauges, chart &amp; almanac)</span>
+          </div>
+          <form id="harvest-form" class="harvest-form">
+            
+            <!-- Optional link to an existing planned crop -->
+            <div class="form-field span-full">
+              <label for="harvest-calendar-link">Link to a planned crop from the almanac (optional)</label>
+              <select id="harvest-calendar-link" name="calendarId">
+                <option value="">— Standalone / Unplanned harvest —</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label for="harvest-member">Producer</label>
+              <input type="text" id="harvest-member" name="author" placeholder="e.g. Nadia" required>
+            </div>
+
+            <div class="form-field">
+              <label for="harvest-crop">Food / Crop</label>
+              <input type="text" id="harvest-crop" name="crop" list="food-presets" placeholder="Select or type crop..." required>
+            </div>
+
+            <div class="form-field">
+              <label for="harvest-category">Category</label>
+              <select id="harvest-category" name="category" required>
+                <option value="Legumes">Legumes</option>
+                <option value="Vegetables">Vegetables</option>
+                <option value="Fruits & Nuts">Fruits &amp; Nuts</option>
+                <option value="Grains">Grains</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label for="harvest-kg">Quantity (kg)</label>
+              <input type="number" id="harvest-kg" name="kg" min="0.1" step="0.1" placeholder="e.g. 2.5" required>
+            </div>
+
+            <div class="form-field">
+              <label for="harvest-distance">Distance</label>
+              <input type="text" id="harvest-distance" name="distance" value="150m" required>
+            </div>
+
+            <div class="form-field">
+              <label for="harvest-calories">Calories (kcal)</label>
+              <input type="number" id="harvest-calories" name="calories" min="0" step="1" placeholder="0" required>
+            </div>
+
+            <div class="form-field">
+              <label for="harvest-protein">Protein (g)</label>
+              <input type="number" id="harvest-protein" name="protein" min="0" step="1" placeholder="0" required>
+            </div>
+
+            <div class="form-field">
+              <label for="harvest-fats">Fats (g)</label>
+              <input type="number" id="harvest-fats" name="fats" min="0" step="1" placeholder="0" required>
+            </div>
+
+            <div class="form-field">
+              <label for="harvest-carbs">Carbs (g)</label>
+              <input type="number" id="harvest-carbs" name="carbs" min="0" step="1" placeholder="0" required>
+            </div>
+
+            <p id="harvest-calc-hint" class="calc-hint span-full">
+              Pick a known crop and enter weight (kg) to auto-fill nutritional values. All fields remain editable.
+            </p>
+
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Confirm harvest &amp; update stocks</button>
+              <button type="button" id="cancel-harvest-form-btn" class="btn-secondary">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Autocomplete options populated from FOOD_DATABASE -->
+        <datalist id="food-presets"></datalist>
+
+        <!-- 12-Month Almanac Grid -->
+        <div class="almanac-scroll">
+          <div class="almanac-grid almanac-grid-head" aria-hidden="true">
+            <div class="almanac-col-info">CROP / MEMBER / YIELD</div>
+            <div class="almanac-col-month">JAN</div>
+            <div class="almanac-col-month">FEB</div>
+            <div class="almanac-col-month">MAR</div>
+            <div class="almanac-col-month">APR</div>
+            <div class="almanac-col-month">MAY</div>
+            <div class="almanac-col-month">JUN</div>
+            <div class="almanac-col-month">JUL</div>
+            <div class="almanac-col-month">AUG</div>
+            <div class="almanac-col-month">SEP</div>
+            <div class="almanac-col-month">OCT</div>
+            <div class="almanac-col-month">NOV</div>
+            <div class="almanac-col-month">DEC</div>
+          </div>
+
+          <div id="almanac-rows" class="almanac-rows">
+            <!-- Injected by app.js -->
+          </div>
+        </div>
+
+        <p id="almanac-summary" class="macros-status">
+          Loading seasonal overview...
+        </p>
+      </article>
     </section>
 
   </main>
 
   <footer class="site-footer">
     <div class="container footer-inner">
-      <span>Living Almanac — Local food mutual-aid network</span>
-      <span>Community data synchronized</span>
+      <span>Food Almanac — Local mutual aid network</span>
+      <span>Synchronized community data</span>
     </div>
   </footer>
 
