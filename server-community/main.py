@@ -57,6 +57,54 @@ def create_session(connection, token, user_id, hours):
     )
     connection.commit()
 
+PROFILES = {
+    "late_blight": {  # potato late blight: thrives in wet, humid conditions
+        "humidity_high": 85,      # % humidity
+        "humidity_medium": 70,    # % humidity
+        "wind_threshold": 15,     # km/h, wind spreads spores further
+        "radius_base_km": 3,
+        "radius_high_km": 10,
+    },
+    "stripe_rust": {  # wheat stripe rust: wind-dispersed spores, needs some humidity
+        "humidity_high": 80,
+        "humidity_medium": 60,
+        "wind_threshold": 20,    # stronger wind = spores travel much further
+        "radius_base_km": 5,
+        "radius_high_km": 25,
+    },
+    "unknown": {  # generic fallback when the disease is not identified
+        "humidity_high": 90,
+        "humidity_medium": 75,
+        "wind_threshold": 25,
+        "radius_base_km": 2,
+        "radius_high_km": 8,
+    },
+}
+
+
+def prediction_model(wind, humidity, disease_name):
+    name = disease_name.lower().strip().replace(" ", "_")
+    if name not in PROFILES:
+        name = "unknown"
+
+    p = PROFILES[name]
+    model_used = "rule-based-threshold-v1-" + name.replace("_", "-")
+
+    if humidity >= p["humidity_high"] and wind >= p["wind_threshold"]:
+        risk = "high"
+        radius = p["radius_high_km"]
+    elif humidity >= p["humidity_medium"] and wind > 0:
+        risk = "medium"
+        radius = p["radius_base_km"]
+    elif humidity >= p["humidity_medium"] or wind >= p["wind_threshold"]:
+        risk = "low"
+        radius = p["radius_base_km"] / 2
+    else:
+        risk = "none"
+        radius = 0
+
+    return risk, radius, model_used
+
 app = Flask("server-community", static_folder="web", static_url_path="/web")
 
 @app.route("/api/login", methods=["POST"])
@@ -157,6 +205,10 @@ def signin():
         max_age=14 * 24 * 3600,
     )
     return response
+
+@app.route("/api/disease_reports", methods=["POST"])
+def api_get_disease_reports():
+    pass
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
@@ -285,10 +337,13 @@ def community_page():
 
 @app.route("/region")
 def region_page():
-    conn = get_db()
-    rows = conn.execute("SELECT name FROM users WHERE active = 1").fetchall()
-    conn.close()
-    return jsonify([row["name"] for row in rows])
+    connection = open_db()
+    user = current_user(connection)
+    connection.close()
+    if user :
+        return send_from_directory("web/regional/", "index.html")
+    else:
+        return redirect("/login")
     
 #
 # OMEGA DEBUG

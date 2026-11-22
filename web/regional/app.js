@@ -18,16 +18,22 @@ let overlays = null;
 function initMap(config, overlayData) {
   overlays = overlayData;
 
-  map = L.map("map", { preferCanvas: true }).setView(config.center, config.zoom);
+  map = L.map("map", { preferCanvas: true }).setView(
+    config.center,
+    config.zoom,
+  );
 
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   }).addTo(map);
 
   document.querySelectorAll(".overlay-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".overlay-btn").forEach((b) => b.classList.remove("active"));
+      document
+        .querySelectorAll(".overlay-btn")
+        .forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       setOverlay(btn.dataset.overlay);
     });
@@ -43,7 +49,10 @@ function stationPopup(s, label, value, unit) {
 }
 
 function setOverlay(name) {
-  if (currentLayer) { map.removeLayer(currentLayer); currentLayer = null; }
+  if (currentLayer) {
+    map.removeLayer(currentLayer);
+    currentLayer = null;
+  }
   if (name === "none" || !overlays[name]) return;
 
   const layer = L.layerGroup();
@@ -52,8 +61,13 @@ function setOverlay(name) {
     overlays.rain.stations.forEach((s) => {
       L.circleMarker([s.lat, s.lng], {
         radius: 6 + s.value * 5,
-        color: "#4a8db0", weight: 1.5, fillColor: "#4a8db0", fillOpacity: 0.45,
-      }).bindPopup(stationPopup(s, "rain", s.value, overlays.rain.unit)).addTo(layer);
+        color: "#4a8db0",
+        weight: 1.5,
+        fillColor: "#4a8db0",
+        fillOpacity: 0.45,
+      })
+        .bindPopup(stationPopup(s, "rain", s.value, overlays.rain.unit))
+        .addTo(layer);
     });
   }
 
@@ -61,8 +75,15 @@ function setOverlay(name) {
     overlays.temperature.stations.forEach((s) => {
       L.circleMarker([s.lat, s.lng], {
         radius: 14,
-        color: tempColor(s.value), weight: 1.5, fillColor: tempColor(s.value), fillOpacity: 0.45,
-      }).bindPopup(stationPopup(s, "temperature", s.value, overlays.temperature.unit)).addTo(layer);
+        color: tempColor(s.value),
+        weight: 1.5,
+        fillColor: tempColor(s.value),
+        fillOpacity: 0.45,
+      })
+        .bindPopup(
+          stationPopup(s, "temperature", s.value, overlays.temperature.unit),
+        )
+        .addTo(layer);
     });
   }
 
@@ -71,11 +92,14 @@ function setOverlay(name) {
       const icon = L.divIcon({
         className: "",
         html: `<div class="wind-arrow" style="transform: rotate(${s.direction}deg)">&#10148;</div>`,
-        iconSize: [24, 24], iconAnchor: [12, 12],
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
       });
       L.marker([s.lat, s.lng], { icon })
-        .bindPopup(`<div class="station-popup"><strong>${s.name}</strong><br>
-          <span class="val">${s.speed} ${overlays.wind.unit}</span> from ${s.direction}&deg;</div>`)
+        .bindPopup(
+          `<div class="station-popup"><strong>${s.name}</strong><br>
+          <span class="val">${s.speed} ${overlays.wind.unit}</span> from ${s.direction}&deg;</div>`,
+        )
         .addTo(layer);
     });
   }
@@ -85,13 +109,27 @@ function setOverlay(name) {
     overlays.diseases.outbreaks.forEach((o) => {
       const c = colors[o.severity] || "#4a8db0";
       L.circle([o.lat, o.lng], {
-        radius: o.radius_m, color: c, weight: 1, dashArray: "4 6",
-        fillColor: c, fillOpacity: 0.15,
-      }).bindPopup(`<div class="station-popup"><strong>${o.name}</strong> <em>(${o.latin})</em><br>
-        severity: ${o.severity}<br>crops: ${o.crops.join(", ")}</div>`).addTo(layer);
+        radius: o.radius_m,
+        color: c,
+        weight: 1,
+        dashArray: "4 6",
+        fillColor: c,
+        fillOpacity: 0.15,
+      })
+        .bindPopup(
+          `<div class="station-popup"><strong>${o.name}</strong> <em>(${o.latin})</em><br>
+        severity: ${o.severity}<br>crops: ${o.crops.join(", ")}</div>`,
+        )
+        .addTo(layer);
       L.circleMarker([o.lat, o.lng], {
-        radius: 5, color: c, fillColor: "#f8f6f0", fillOpacity: 1, weight: 2,
-      }).bindTooltip(`${o.name} (${o.severity})`).addTo(layer);
+        radius: 5,
+        color: c,
+        fillColor: "#f8f6f0",
+        fillOpacity: 1,
+        weight: 2,
+      })
+        .bindTooltip(`${o.name} (${o.severity})`)
+        .addTo(layer);
     });
   }
 
@@ -138,7 +176,8 @@ function initLedger(trades) {
 
   const maxAbs = Math.max(...entries.map((e) => Math.abs(e.balance)), 1);
 
-  const sideList = (items) => `<ul>${items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
+  const sideList = (items) =>
+    `<ul>${items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
 
   function render(index) {
     const e = entries[index];
@@ -149,7 +188,9 @@ function initLedger(trades) {
     positionLabel.textContent = `entry ${index + 1} of ${entries.length} // ${e.period}`;
 
     // running balance up to this entry
-    const running = entries.slice(0, index + 1).reduce((sum, x) => sum + x.balance, 0);
+    const running = entries
+      .slice(0, index + 1)
+      .reduce((sum, x) => sum + x.balance, 0);
     const positive = running >= 0;
     const magnitude = (Math.abs(running) / maxAbs) * 48;
 
@@ -190,15 +231,19 @@ function initProfile(profile) {
       <li><span class="k">skills:</span> ${profile.skills.join(", ")}</li>
     </ul>`;
 
-  btn.addEventListener("click", () => (dialog.open ? dialog.close() : dialog.showModal()));
-  dialog.addEventListener("click", (ev) => { if (ev.target === dialog) dialog.close(); });
+  btn.addEventListener("click", () =>
+    dialog.open ? dialog.close() : dialog.showModal(),
+  );
+  dialog.addEventListener("click", (ev) => {
+    if (ev.target === dialog) dialog.close();
+  });
 }
 
 /* ============ entry point ============ */
 
 async function main() {
   try {
-    const data = await fetchJson("data.json");
+    const data = await fetchJson("api/region");
     initMap(data.map, data.overlays);
     renderWarnings(data.warnings);
     initLedger(data.trades);

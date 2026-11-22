@@ -15,7 +15,7 @@ async function loadData() {
       fetch(API_USERS_URL),
       fetch(API_CROPS_URL),
       fetch(API_HARVESTS_URL),
-      fetch(API_PLANS_URL)
+      fetch(API_PLANS_URL),
     ]);
 
     if (!usersRes.ok || !cropsRes.ok || !harvestsRes.ok || !plansRes.ok) {
@@ -28,7 +28,7 @@ async function loadData() {
     calendarEntries = await plansRes.json();
 
     cropDatabase = {};
-    cropsList.forEach(c => {
+    cropsList.forEach((c) => {
       cropDatabase[c.name.toLowerCase()] = c;
     });
 
@@ -60,7 +60,7 @@ function populateFoodPresets() {
   if (!datalist) return;
 
   datalist.innerHTML = Object.values(cropDatabase)
-    .map(c => `<option value="${capitalize(c.name)}"></option>`)
+    .map((c) => `<option value="${capitalize(c.name)}"></option>`)
     .join("");
 }
 
@@ -81,7 +81,9 @@ function renderCards(items) {
     return;
   }
 
-  container.innerHTML = items.map((item, index) => `
+  container.innerHTML = items
+    .map(
+      (item, index) => `
     <article class="harvest-card">
       <div>
         <div class="card-header">
@@ -113,19 +115,28 @@ function renderCards(items) {
 
       <div class="card-footer">
         <span>Producer: <strong>${capitalize(item.author)}</strong></span>
-        <span class="status-dispo">Available</span>
       </div>
     </article>
-  `).join("");
+  `,
+    )
+    .join("");
 }
 
 /* =========================================
    02 / NUTRITION & GAUGES
    ========================================= */
-function renderSegmentedGauge(containerId, currentValue, totalValue, fillClass) {
+function renderSegmentedGauge(
+  containerId,
+  currentValue,
+  totalValue,
+  fillClass,
+) {
   const totalSegments = 15;
   const ratio = totalValue > 0 ? currentValue / totalValue : 0;
-  const activeSegments = Math.min(totalSegments, Math.round(ratio * totalSegments));
+  const activeSegments = Math.min(
+    totalSegments,
+    Math.round(ratio * totalSegments),
+  );
 
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -134,33 +145,71 @@ function renderSegmentedGauge(containerId, currentValue, totalValue, fillClass) 
 
   for (let i = 0; i < totalSegments; i++) {
     const isFilled = i < activeSegments;
-    const segmentClass = isFilled ? `gauge-segment ${fillClass}` : "gauge-segment";
+    const segmentClass = isFilled
+      ? `gauge-segment ${fillClass}`
+      : "gauge-segment";
     container.innerHTML += `<div class="${segmentClass}"></div>`;
   }
 }
 
 function calculateAndRenderNutrition(members, availableItems) {
-  const reqCalories = members.reduce((acc, m) => acc + Number(m.requiredCalories || 0), 0);
-  const reqProtein = members.reduce((acc, m) => acc + Number(m.requiredProtein || 0), 0);
-  const reqFats = members.reduce((acc, m) => acc + Number(m.requiredFats || 0), 0);
-  const reqCarbs = members.reduce((acc, m) => acc + Number(m.requiredCarbs || 0), 0);
+  const reqCalories = members.reduce(
+    (acc, m) => acc + Number(m.requiredCalories || 0),
+    0,
+  );
+  const reqProtein = members.reduce(
+    (acc, m) => acc + Number(m.requiredProtein || 0),
+    0,
+  );
+  const reqFats = members.reduce(
+    (acc, m) => acc + Number(m.requiredFats || 0),
+    0,
+  );
+  const reqCarbs = members.reduce(
+    (acc, m) => acc + Number(m.requiredCarbs || 0),
+    0,
+  );
 
-  const availCalories = availableItems.reduce((acc, i) => acc + Number(i.calories || 0), 0);
-  const availProtein = availableItems.reduce((acc, i) => acc + Number(i.protein || 0), 0);
-  const availFats = availableItems.reduce((acc, i) => acc + Number(i.fats || 0), 0);
-  const availCarbs = availableItems.reduce((acc, i) => acc + Number(i.carbs || 0), 0);
+  const availCalories = availableItems.reduce(
+    (acc, i) => acc + Number(i.calories || 0),
+    0,
+  );
+  const availProtein = availableItems.reduce(
+    (acc, i) => acc + Number(i.protein || 0),
+    0,
+  );
+  const availFats = availableItems.reduce(
+    (acc, i) => acc + Number(i.fats || 0),
+    0,
+  );
+  const availCarbs = availableItems.reduce(
+    (acc, i) => acc + Number(i.carbs || 0),
+    0,
+  );
 
   document.getElementById("members-count-badge").textContent =
     `${members.length} ${members.length > 1 ? "members" : "member"}`;
-  document.getElementById("total-calories").textContent = Math.round(reqCalories).toLocaleString("en-US");
-  document.getElementById("stock-calories").textContent = `${Math.round(availCalories).toLocaleString("en-US")} kcal`;
+  document.getElementById("total-calories").textContent =
+    Math.round(reqCalories).toLocaleString("en-US");
+  document.getElementById("stock-calories").textContent =
+    `${Math.round(availCalories).toLocaleString("en-US")} kcal`;
 
-  const pctCalories = reqCalories > 0 ? Math.min(100, Math.round((availCalories / reqCalories) * 100)) : 0;
-  document.getElementById("pct-calories").innerHTML = `<strong>${pctCalories}% covered</strong>`;
+  const pctCalories =
+    reqCalories > 0
+      ? Math.min(100, Math.round((availCalories / reqCalories) * 100))
+      : 0;
+  document.getElementById("pct-calories").innerHTML =
+    `<strong>${pctCalories}% covered</strong>`;
 
-  document.getElementById("stock-protein").textContent = Math.round(availProtein);
+  document.getElementById("stock-protein").textContent =
+    Math.round(availProtein);
   document.getElementById("total-protein").textContent = Math.round(reqProtein);
-  renderSegmentedGauge("gauge-protein", availProtein, reqProtein, "filled-sage");
+  renderSegmentedGauge(
+    "gauge-protein",
+    availProtein,
+    reqProtein,
+    "filled-sage",
+  );
 
   document.getElementById("stock-fats").textContent = Math.round(availFats);
   document.getElementById("total-fats").textContent = Math.round(reqFats);
@@ -220,7 +269,7 @@ function renderContributorsChart(availableItems) {
   const byAuthor = {};
   let totalCalories = 0;
 
-  availableItems.forEach(item => {
+  availableItems.forEach((item) => {
     const kcal = Number(item.calories || 0);
     const key = capitalize(item.author);
     byAuthor[key] = (byAuthor[key] || 0) + kcal;
@@ -274,10 +323,11 @@ function renderContributorsChart(availableItems) {
     </svg>
   `;
 
-  legendContainer.innerHTML = contributors.map((c, idx) => {
-    const color = colors[idx % colors.length];
-    const pct = Math.round((c.calories / totalCalories) * 100);
-    return `
+  legendContainer.innerHTML = contributors
+    .map((c, idx) => {
+      const color = colors[idx % colors.length];
+      const pct = Math.round((c.calories / totalCalories) * 100);
+      return `
       <li class="pie-legend-item">
         <span class="pie-legend-left">
           <span class="legend-square" style="background-color: ${color};" aria-hidden="true"></span>
@@ -288,7 +338,8 @@ function renderContributorsChart(availableItems) {
         </span>
       </li>
     `;
-  }).join("");
+    })
+    .join("");
 }
 
 /* =========================================
@@ -321,7 +372,7 @@ function renderAlmanac(entries) {
   const summary = document.getElementById("almanac-summary");
   if (!rowsContainer) return;
 
-  const activeEntries = entries.filter(e => !e.harvested);
+  const activeEntries = entries.filter((e) => !e.harvested);
   const harvestedCount = entries.length - activeEntries.length;
 
   badge.textContent = `${activeEntries.length} active • ${harvestedCount} harvested`;
@@ -332,27 +383,36 @@ function renderAlmanac(entries) {
     return;
   }
 
-  const sortedEntries = [...entries].sort((a, b) => Number(a.harvested) - Number(b.harvested));
+  const sortedEntries = [...entries].sort(
+    (a, b) => Number(a.harvested) - Number(b.harvested),
+  );
 
-  rowsContainer.innerHTML = sortedEntries.map(entry => {
-    let monthCells = "";
-    for (let m = 1; m <= 12; m++) {
-      const phase = getMonthPhase(m, entry.sowMonth, entry.harvestMonth);
-      let blockHtml = "";
-      if (phase === "sow") blockHtml = `<span class="phase-block cell-sow" title="Sowing">S</span>`;
-      else if (phase === "grow") blockHtml = `<span class="phase-block cell-grow" title="Growing"></span>`;
-      else if (phase === "harvest") blockHtml = `<span class="phase-block cell-harvest" title="Harvest">H</span>`;
-      else if (phase === "both") blockHtml = `<span class="phase-block cell-both" title="Sow &amp; Harvest">S/H</span>`;
+  rowsContainer.innerHTML = sortedEntries
+    .map((entry) => {
+      let monthCells = "";
+      for (let m = 1; m <= 12; m++) {
+        const phase = getMonthPhase(m, entry.sowMonth, entry.harvestMonth);
+        let blockHtml = "";
+        if (phase === "sow")
+          blockHtml = `<span class="phase-block cell-sow" title="Sowing">S</span>`;
+        else if (phase === "grow")
+          blockHtml = `<span class="phase-block cell-grow" title="Growing"></span>`;
+        else if (phase === "harvest")
+          blockHtml = `<span class="phase-block cell-harvest" title="Harvest">H</span>`;
+        else if (phase === "both")
+          blockHtml = `<span class="phase-block cell-both" title="Sow &amp; Harvest">S/H</span>`;
 
-      monthCells += `<div class="almanac-cell">${blockHtml}</div>`;
-    }
+        monthCells += `<div class="almanac-cell">${blockHtml}</div>`;
+      }
 
-    const rowClass = entry.harvested ? "almanac-grid almanac-row is-harvested" : "almanac-grid almanac-row";
-    const stampHtml = entry.harvested
-      ? `<span class="harvested-stamp">HARVESTED${entry.harvestedKg ? ` (${entry.harvestedKg} kg)` : ""}</span>`
-      : "";
+      const rowClass = entry.harvested
+        ? "almanac-grid almanac-row is-harvested"
+        : "almanac-grid almanac-row";
+      const stampHtml = entry.harvested
+        ? `<span class="harvested-stamp">HARVESTED${entry.harvestedKg ? ` (${entry.harvestedKg} kg)` : ""}</span>`
+        : "";
 
-    return `
+      return `
       <div class="${rowClass}">
         <div class="almanac-row-info">
           <div class="almanac-title-line">
@@ -370,11 +430,15 @@ function renderAlmanac(entries) {
         ${monthCells}
       </div>
     `;
-  }).join("");
+    })
+    .join("");
 
-  const upcomingKg = activeEntries.reduce((sum, e) => sum + Number(e.estimatedKg || 0), 0);
+  const upcomingKg = activeEntries.reduce(
+    (sum, e) => sum + Number(e.estimatedKg || 0),
+    0,
+  );
   const harvestedKg = entries
-    .filter(e => e.harvested)
+    .filter((e) => e.harvested)
     .reduce((sum, e) => sum + Number(e.harvestedKg || e.estimatedKg || 0), 0);
 
   summary.textContent = `Upcoming forecast: ~${upcomingKg} kg across ${activeEntries.length} active crop(s) — Already harvested this season: ${harvestedKg} kg.`;
@@ -384,11 +448,16 @@ function populatePlannedCropsSelect() {
   const select = document.getElementById("harvest-calendar-link");
   if (!select) return;
 
-  const activeCrops = calendarEntries.filter(e => !e.harvested);
-  select.innerHTML = `<option value="">— Standalone / Unplanned harvest —</option>` +
-    activeCrops.map(e => `
+  const activeCrops = calendarEntries.filter((e) => !e.harvested);
+  select.innerHTML =
+    `<option value="">— Standalone / Unplanned harvest —</option>` +
+    activeCrops
+      .map(
+        (e) => `
       <option value="${e.id}">${e.crop} — ${capitalize(e.member)} (est. ${e.estimatedKg} kg)</option>
-    `).join("");
+    `,
+      )
+      .join("");
 }
 
 /* =========================================
@@ -420,7 +489,10 @@ function setupForms() {
       if (harvestPanel) harvestPanel.classList.add("is-hidden");
       cropPanel.classList.toggle("is-hidden");
 
-      if (!cropPanel.classList.contains("is-hidden") && primaryDeficitNutrient) {
+      if (
+        !cropPanel.classList.contains("is-hidden") &&
+        primaryDeficitNutrient
+      ) {
         const nutrientSelect = document.getElementById("crop-nutrient");
         if (nutrientSelect) nutrientSelect.value = primaryDeficitNutrient;
       }
@@ -473,10 +545,12 @@ function setupForms() {
       calcHint.textContent = `Matched "${capitalize(ref.name)}" in DB — enter quantity in kg to calculate macros.`;
       calcHint.classList.remove("is-auto");
     } else if (cropInput.value.trim().length > 0) {
-      calcHint.textContent = "New custom crop — enter calories, protein, fats and carbs manually (it will be added to DB).";
+      calcHint.textContent =
+        "New custom crop — enter calories, protein, fats and carbs manually (it will be added to DB).";
       calcHint.classList.remove("is-auto");
     } else {
-      calcHint.textContent = "Pick a crop from the DB and enter weight (kg) to auto-fill nutritional values. All fields remain editable.";
+      calcHint.textContent =
+        "Pick a crop from the DB and enter weight (kg) to auto-fill nutritional values. All fields remain editable.";
       calcHint.classList.remove("is-auto");
     }
   }
@@ -491,10 +565,12 @@ function setupForms() {
       const selectedId = parseInt(calendarLinkSelect.value, 10);
       if (!selectedId) return;
 
-      const planned = calendarEntries.find(e => e.id === selectedId);
+      const planned = calendarEntries.find((e) => e.id === selectedId);
       if (!planned) return;
 
-      document.getElementById("harvest-member").value = capitalize(planned.member);
+      document.getElementById("harvest-member").value = capitalize(
+        planned.member,
+      );
       cropInput.value = planned.crop;
       kgInput.value = planned.estimatedKg;
       updateAutoCalculatedMacros();
@@ -512,14 +588,17 @@ function setupForms() {
         nutrient: document.getElementById("crop-nutrient").value,
         estimatedKg: parseFloat(document.getElementById("crop-kg").value),
         sowMonth: parseInt(document.getElementById("crop-sow").value, 10),
-        harvestMonth: parseInt(document.getElementById("crop-harvest").value, 10)
+        harvestMonth: parseInt(
+          document.getElementById("crop-harvest").value,
+          10,
+        ),
       };
 
       try {
         const response = await fetch(API_PLANS_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
@@ -550,19 +629,20 @@ function setupForms() {
         protein: parseInt(protInput.value, 10) || 0,
         fats: parseInt(fatsInput.value, 10) || 0,
         carbs: parseInt(carbsInput.value, 10) || 0,
-        calendarId: calendarId
+        calendarId: calendarId,
       };
 
       try {
         const response = await fetch(API_HARVESTS_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         harvestForm.reset();
-        calcHint.textContent = "Pick a crop from the DB and enter weight (kg) to auto-fill nutritional values. All fields remain editable.";
+        calcHint.textContent =
+          "Pick a crop from the DB and enter weight (kg) to auto-fill nutritional values. All fields remain editable.";
         calcHint.classList.remove("is-auto");
         harvestPanel.classList.add("is-hidden");
         await loadData();

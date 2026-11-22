@@ -2,24 +2,26 @@
    VARIABLES & PALETTE (ENCRE ROUILLE FONCÉE)
    ========================================= */
 :root {
-  --paper: #ECE9DF;
-  --card: #F8F6F0;
-  --ink: #441C11;
+  --paper: #ece9df;
+  --card: #f8f6f0;
+  --ink: #441c11;
   --forest: #244732;
-  --sage: #5A7432;
-  --ochre: #DFB548;
-  --rust: #A65638;
-  --sky: #4A8DB0;
+  --sage: #5a7432;
+  --ochre: #dfb548;
+  --rust: #a65638;
+  --sky: #4a8db0;
 
-  --font-serif: 'Newsreader', Georgia, serif;
-  --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'IBM Plex Mono', monospace;
+  --font-serif: "Newsreader", Georgia, serif;
+  --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
 }
 
 /* =========================================
    BASE & TRAME PAPIER MILLIMÉTRÉ
    ========================================= */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -27,9 +29,6 @@
 
 body {
   background-color: var(--paper);
-  background-image: 
-    linear-gradient(to right, rgba(68, 28, 17, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(68, 28, 17, 0.05) 1px, transparent 1px);
   background-size: 28px 28px;
   color: var(--ink);
   font-family: var(--font-sans);
@@ -80,6 +79,25 @@ body {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+.btn {
+  background-color: var(--forest);
+  color: var(--card);
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  padding: 0.45rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 2px 2px 0px var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .brand-dot {
@@ -289,8 +307,12 @@ body {
   color: rgba(68, 28, 17, 0.6);
 }
 
-.text-sage { color: var(--sage); }
-.text-rust { color: var(--rust); }
+.text-sage {
+  color: var(--sage);
+}
+.text-rust {
+  color: var(--rust);
+}
 
 .card-footer {
   display: flex;
@@ -474,9 +496,15 @@ body {
   flex-shrink: 0;
 }
 
-.bg-sage { background-color: var(--sage); }
-.bg-rust { background-color: var(--rust); }
-.bg-ochre { background-color: var(--ochre); }
+.bg-sage {
+  background-color: var(--sage);
+}
+.bg-rust {
+  background-color: var(--rust);
+}
+.bg-ochre {
+  background-color: var(--ochre);
+}
 
 .gauge-values {
   color: rgba(68, 28, 17, 0.8);
@@ -832,10 +860,18 @@ body {
   text-transform: uppercase;
 }
 
-.pill-protein  { background-color: rgba(90, 116, 50, 0.2); }
-.pill-carbs    { background-color: rgba(223, 181, 72, 0.35); }
-.pill-fats     { background-color: rgba(166, 86, 56, 0.22); }
-.pill-vitamins { background-color: rgba(74, 141, 176, 0.22); }
+.pill-protein {
+  background-color: rgba(90, 116, 50, 0.2);
+}
+.pill-carbs {
+  background-color: rgba(223, 181, 72, 0.35);
+}
+.pill-fats {
+  background-color: rgba(166, 86, 56, 0.22);
+}
+.pill-vitamins {
+  background-color: rgba(74, 141, 176, 0.22);
+}
 
 .almanac-cell {
   border-right: 1px solid rgba(68, 28, 17, 0.14);

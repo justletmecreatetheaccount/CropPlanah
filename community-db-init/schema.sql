@@ -81,17 +81,29 @@ CREATE TABLE IF NOT EXISTS events (
     created_at      TEXT
 );
 
+CREATE TABLE IF NOT EXISTS pathogens (
+    id       INTEGER PRIMARY KEY,
+    name     TEXT UNIQUE NOT NULL          -- "potato blight", "powdery mildew"
+    name_latin     TEXT UNIQUE NOT NULL   
+);
+
+CREATE TABLE IF NOT EXISTS pathogen_crops (
+    pathogen_id INTEGER NOT NULL REFERENCES pathogens(id),
+    crop_id     INTEGER NOT NULL REFERENCES crops(id),
+    PRIMARY KEY (pathogen_id, crop_id)
+);
+
 -- Locally reported diseases. Two-step: filed by anyone, confirmed by
 -- someone else before it counts toward alerts. Disclosed controls
 -- whether it is projected to the regional server.
 CREATE TABLE IF NOT EXISTS outbreak_reports (
     id           INTEGER PRIMARY KEY,
     crop_id      INTEGER REFERENCES crops(id),   -- NULL = generalized report
-    pathogen     TEXT NOT NULL,                  -- from a fixed demo list, not freeform
+    pathogen     INTEGER REFERENCES pathogens(id),                  -- from a fixed demo list, not freeform
     lat          REAL,
     lon          REAL,
     reported_by  INTEGER NOT NULL REFERENCES users(id),
     reported_at  TEXT NOT NULL,
-    confirmed_by INTEGER REFERENCES users(id),   -- NULL = not yet confirmed
     disclosed    INTEGER NOT NULL DEFAULT 1      -- 1 = share with region server
 );
+
