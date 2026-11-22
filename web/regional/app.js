@@ -137,6 +137,18 @@ function setOverlay(name) {
   currentLayer = layer;
 }
 
+async function refreshOverlays(name) {
+  overlays = (await fetchJson("api/map_overlays")).overlays;
+  const btn = name
+    ? document.querySelector(`.overlay-btn[data-overlay="${name}"]`)
+    : document.querySelector(".overlay-btn.active");
+  const target = btn ? btn.dataset.overlay : "none";
+  document
+    .querySelectorAll(".overlay-btn")
+    .forEach((b) => b.classList.toggle("active", b.dataset.overlay === target));
+  setOverlay(target);
+}
+
 // cold sky to warm rust
 function tempColor(t) {
   const k = Math.min(Math.max((t - 5) / 8, 0), 1);
@@ -154,9 +166,8 @@ function renderWarnings(warnings) {
     li.innerHTML = `
       <span class="risk r-${w.risk}">${w.risk} risk</span>
       <p class="msg">warning issued at ${w.issued_at}, <strong>${w.disease}</strong>
-        will probably hit your ${w.crop} crops according to the
-        <strong>${w.model}</strong> prediction model</p>
-      <p class="note">${w.note}</p>
+        chance of hitting your ${w.crop} crops according to the
+        <strong>${w.model}</strong> prediction model is :</p>
       <p class="meta">${w.latin} // mesh signal ${w.id}</p>`;
     list.appendChild(li);
   });
@@ -215,12 +226,17 @@ function initLedger(trades) {
   render(entries.length - 1);
 }
 
-/* ============ profile ============ */
+/* ============ add Diseases ============ */
 
-function initProfile(profile) {
-  const dialog = document.getElementById("profile-card");
-  const btn = document.getElementById("btn-profile");
+function initAddDisease() {
+  const dialog = document.getElementById("disease-card");
+  const btn = document.getElementById("btn-disease");
+  const cancel_btn = document.getElementById("dis-cancel");
+  const diseaseForm = document.getElementById("disease-form");
+  const diseaseStatus = document.getElementById("dis-status");
+  //console.log(cancel_btn);
 
+  /*
   dialog.innerHTML = `
     <h3 class="profile-name">${profile.name}</h3>
     <p class="profile-role">${profile.role}</p>
@@ -229,14 +245,67 @@ function initProfile(profile) {
       <li><span class="k">energy credits:</span> <span class="profile-credits">+${profile.energy_credits} Wh banked</span></li>
       <li><span class="k">member since:</span> ${profile.member_since}</li>
       <li><span class="k">skills:</span> ${profile.skills.join(", ")}</li>
-    </ul>`;
+    </ul>`;*/
 
   btn.addEventListener("click", () =>
-    dialog.open ? dialog.close() : dialog.showModal(),
+    dialog.open ? dialog.close() : diseaseOnClick(dialog),
   );
+  cancel_btn.addEventListener("click", () => {console.log("CLOSE ENCULE"); dialog.close()});
   dialog.addEventListener("click", (ev) => {
     if (ev.target === dialog) dialog.close();
   });
+
+
+diseaseForm.addEventListener("submit", async (ev) => {
+  ev.preventDefault();                       // method="dialog" would only close it
+  const raw = Object.fromEntries(new FormData(diseaseForm));
+  const payload = {
+    pathogen_id: Number(raw.pathogen_id),
+    crop_id: raw.crop_id === "" ? null : Number(raw.crop_id),
+    lat: Number(raw.lat),
+    lon: Number(raw.lon),
+  };
+
+  try {
+    const res = await fetch("/api/outbreak_reports", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(`${res.status}`);
+    diseaseForm.reset();
+    dialog.close();
+    // refresh the disease overlay here so the new circle shows up
+    await refreshOverlays("diseases");
+  } catch (err) {
+    diseaseStatus.hidden = false;
+    diseaseStatus.className = "form-status is-error";
+    diseaseStatus.textContent = `unreachable: ${err.message}`;
+  }
+});
+  
+}
+
+function fillSelect(select, optionData, optionLabel) {
+  // keep the first option (the empty one "-- from the fixed list --")
+  optionData.forEach((o) => {
+    const opt = document.createElement("option");
+    opt.value = o.id;
+    opt.textContent = optionLabel(o);
+    select.appendChild(opt);
+  });
+}
+
+
+
+async function diseaseOnClick(dialog) {
+  const pathogens = await fetchJson("/api/pathogens");
+  const crops = await fetchJson("/api/crops");
+  fillSelect(document.getElementById("dis-pathogen"),
+    pathogens, (p) => `${p.name} (${p.latin})`);
+  fillSelect(document.getElementById("dis-crop"),
+    crops, (c) => c.name);
+  dialog.showModal();
 }
 
 /* ============ entry point ============ */
@@ -254,7 +323,7 @@ async function main() {
     initMap(setup.map, overlays.overlays);
     renderWarnings(disease_rep.reports);
     initLedger(setup.trades);
-    //initProfile(setup.profile);
+    initAddDisease();
   } catch (err) {
     console.log(err);
     document.getElementById("warnings").innerHTML =

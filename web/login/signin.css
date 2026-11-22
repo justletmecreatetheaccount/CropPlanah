@@ -51,7 +51,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 10;
-  background-color: rgba(236, 233, 223, 0.95);
+  background-color: rgba(236, 233, 223, 1);
   border-bottom: 2px solid var(--ink);
   padding: 0.85rem 0;
 }

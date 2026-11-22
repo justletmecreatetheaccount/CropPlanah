@@ -43,7 +43,59 @@
       </nav>
     </header>
 
-    <dialog id="profile-card"></dialog>
+    <dialog id="disease-card">
+      <form id="disease-form" method="dialog">
+    <h3 class="dialog-title">Declare an outbreak</h3>
+    <p class="dialog-sub">Filed in one step, confirmed by someone else before it counts.</p>
+
+    <div class="field">
+      <label for="dis-pathogen">Pathogen <span class="req" aria-hidden="true">*</span></label>
+      <select id="dis-pathogen" name="pathogen_id" required>
+        <option value="">-- from the list --</option>
+<!--         <option value="1">late blight (Phytophthora infestans)</option>
+        <option value="2">apple scab (Venturia inaequalis)</option>
+        <option value="3">powdery mildew (Podosphaera leucotricha)</option>
+        <option value="4">downy mildew (Peronospora belbahrii)</option>
+        <option value="5">early blight (Alternaria solani)</option> -->
+      </select>
+      <p class="field-hint">the list lives in the database, no freeform</p>
+    </div>
+
+    <div class="field">
+      <label for="dis-crop">Crop</label>
+      <select id="dis-crop" name="crop_id" required>
+        <option value=""> -- from the list -- </option>
+<!--         <option value="1">potato</option>
+        <option value="2">tomato</option>
+        <option value="3">carrot</option>
+        <option value="4">dry beans</option>
+        <option value="5">apple</option>
+        <option value="6">garlic</option>
+        <option value="7">pear</option>
+        <option value="8">squash</option>
+        <option value="9">basil</option> -->
+      </select>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="dis-lat">Latitude</label>
+        <input type="number" step="0.001" id="dis-lat" name="lat" required>
+      </div>
+      <div class="field">
+        <label for="dis-lon">Longitude</label>
+        <input type="number" step="0.001" id="dis-lon" name="lon" required>
+      </div>
+    </div>
+
+    <div class="dialog-actions">
+      <button type="button" class="btn" id="dis-cancel">cancel</button>
+      <button type="submit" class="btn">declare</button>
+    </div>
+
+    <p class="form-status" id="dis-status" hidden></p>
+  </form>
+    </dialog>
 
     <main class="board">
       <section class="panel panel-map">

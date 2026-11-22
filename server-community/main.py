@@ -168,7 +168,7 @@ def prediction_model(wind, humidity, disease_name):
         risk = "none"
         radius = 0
 
-    return risk, radius * 1000, model_used
+    return risk, radius, model_used
 
 app = Flask("server-community", static_folder="web", static_url_path="/web")
 
@@ -327,6 +327,64 @@ def api_get_disease_reports():
         })
 
     return jsonify({"reports": reports, "ok": True})
+
+@app.route("/api/outbreak_reports", methods=["POST"])
+def api_outbreak_reports():
+    conn = open_db()
+    user = current_user(conn)
+    conn.close()
+    if user is None:
+        return jsonify({"error": "login required"}), 401
+    user_id = user["id"]
+    if user_id is None:
+        return jsonify({"error": "login required"}), 401
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({"error": "body must be a JSON object"}), 400
+
+    pathogen_id = payload.get("pathogen_id")
+    if pathogen_id is None:
+        return jsonify({"error": "pathogen_id is required"}), 400
+
+    crop_id = payload.get("crop_id")  # None = generalized report
+    lat = payload.get("lat")
+    lon = payload.get("lon")
+    disclosed = payload.get("disclosed", 1)  # default: share with region server
+
+    if not isinstance(pathogen_id, int) or (
+        not isinstance(crop_id, int) and crop_id is not None
+    ):
+        return jsonify({"error": "pathogen_id and crop_id must be integers"}), 400
+    if lat is not None and not (isinstance(lat, (int, float)) and -90 <= lat <= 90):
+        return jsonify({"error": "lat must be a number in [-90, 90]"}), 400
+    if lon is not None and not (isinstance(lon, (int, float)) and -180 <= lon <= 180):
+        return jsonify({"error": "lon must be a number in [-180, 180]"}), 400
+    if disclosed not in (0, 1):
+        return jsonify({"error": "disclosed must be 0 or 1"}), 400
+
+    conn = open_db()
+    try:
+        if conn.execute(
+            "SELECT 1 FROM pathogens WHERE id = ?", (pathogen_id,)
+        ).fetchone() is None:
+            return jsonify({"error": "unknown pathogen"}), 400
+        if crop_id is not None and conn.execute(
+            "SELECT 1 FROM crops WHERE id = ?", (crop_id,)
+        ).fetchone() is None:
+            return jsonify({"error": "unknown crop"}), 400
+
+        cur = conn.execute(
+            "INSERT INTO outbreak_reports "
+            "(crop_id, pathogen, lat, lon, reported_by, reported_at, disclosed) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (crop_id, pathogen_id, lat, lon, user_id,
+             datetime.now().isoformat(timespec="seconds"), disclosed),
+        )
+        conn.commit()
+        return jsonify({"id": cur.lastrowid, "status": "filed"}), 201
+    finally:
+        conn.close()
 
 @app.route("/api/map_overlays", methods=["GET"])
 def api_get_map_overlays():
@@ -829,6 +887,20 @@ def api_create_plan():
 
     return jsonify({"id": plan_id, "status": "created"}), 201
 
+@app.route("/api/pathogens", methods=["GET"])
+def api_pathogens():
+    conn = open_db()
+    try:
+        rows = conn.execute(
+            "SELECT id, name, name_latin FROM pathogens"
+        ).fetchall()
+    finally:
+        conn.close()
+
+    return jsonify([
+        {"id": r["id"], "name": r["name"], "latin": r["name_latin"]}
+        for r in rows
+    ])
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
