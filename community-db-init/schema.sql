@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS events (
 
 CREATE TABLE IF NOT EXISTS pathogens (
     id       INTEGER PRIMARY KEY,
-    name     TEXT UNIQUE NOT NULL          -- "potato blight", "powdery mildew"
+    name     TEXT UNIQUE NOT NULL,          -- "potato blight", "powdery mildew"
     name_latin     TEXT UNIQUE NOT NULL   
 );
 

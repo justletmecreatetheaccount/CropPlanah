@@ -108,5 +108,6 @@
       { "period": "week 47", "gave": ["beekeeping tutorial, 2 hours"], "got": ["6 jars of fermented cabbage", "40 m of drip line"], "balance": 22 },
       { "period": "week 47", "gave": ["3 scion cuttings", "1 rain barrel"], "got": ["9 kg quinces"], "balance": -11 }
     ]
-  }
+  },
+  "ok": true
 }

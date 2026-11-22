@@ -50,6 +50,10 @@ crops = [
     ("dry beans", 3410, 63.0, 21.0, 1.5, 3.0, 300),
     ("apple",      520, 14.0, 0.3, 0.2, 1.5,  60),
     ("garlic",    1490, 33.0, 6.4, 0.5, 1.8, 180),
+    # below: only here because pathogens attack them (verify against USDA too)
+    ("pear",       570, 15.2, 0.4, 0.1, 1.5,  60),
+    ("squash",     450, 12.0, 1.0, 0.1, 1.2,  90),   # winter squash, stores well
+    ("basil",      230,  2.7, 3.2, 0.6, 2.0,    5),   # herb, fiddly, short life
 ]
 for c in crops:
     connection.execute(
@@ -96,7 +100,57 @@ connection.execute(
     (1, 1, (date.today() + timedelta(days=3)).isoformat()),
 )
 
+# --- pathogens: the fixed demo list, never freeform ---
+pathogens = [
+    # name, latin, [crops it attacks]
+    ("late blight",    "Phytophthora infestans",   ["tomato", "potato"]),
+    ("apple scab",     "Venturia inaequalis",      ["apple", "pear"]),
+    ("powdery mildew", "Podosphaera leucotricha",  ["apple", "squash"]),
+    ("downy mildew",   "Peronospora belbahrii",    ["basil"]),
+    ("early blight",   "Alternaria solani",        ["tomato", "potato"]),
+]
+for name, latin, attacked in pathogens:
+    cur = connection.execute(
+        "INSERT INTO pathogens (name, name_latin) VALUES (?, ?)", (name, latin))
+    pathogen_id = cur.lastrowid
+    for crop_name in attacked:
+        crop = connection.execute(
+            "SELECT id FROM crops WHERE name = ?", (crop_name,)).fetchone()
+        if crop is None:
+            raise SystemExit(f"crop '{crop_name}' is missing from the crops list above")
+        connection.execute(
+            "INSERT INTO pathogen_crops (pathogen_id, crop_id) VALUES (?, ?)",
+            (pathogen_id, crop["id"]),
+        )
+
+# --- outbreak reports: locally seen diseases, all filed by marie (id 1) ---
+outbreaks = [
+    # pathogen, crop (None = generalized report), lat, lon, days_ago, disclosed
+    ("late blight",    "potato", 50.822, 4.344,  1, 1),
+    ("apple scab",     None,     50.851, 4.285,  2, 1),
+    ("powdery mildew", "apple",  50.836, 4.326,  3, 1),
+    ("downy mildew",   "basil",  50.834, 4.323,  3, 0),  # seen, kept local for now
+    ("early blight",   "tomato", 50.843, 4.320,  0, 1),
+]
+for pname, crop_name, lat, lon, days_ago, disclosed in outbreaks:
+    pathogen = connection.execute(
+        "SELECT id FROM pathogens WHERE name = ?", (pname,)).fetchone()
+    if pathogen is None:
+        raise SystemExit(f"pathogen '{pname}' is missing from the pathogens list above")
+    crop_id = None
+    if crop_name is not None:
+        crop = connection.execute(
+            "SELECT id FROM crops WHERE name = ?", (crop_name,)).fetchone()
+        if crop is None:
+            raise SystemExit(f"crop '{crop_name}' is missing from the crops list above")
+        crop_id = crop["id"]
+    connection.execute(
+        "INSERT INTO outbreak_reports (crop_id, pathogen, lat, lon, "
+        "reported_by, reported_at, disclosed) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (crop_id, pathogen["id"], lat, lon, 1,
+         (date.today() - timedelta(days=days_ago)).isoformat(), disclosed),
+    )
+
 connection.commit()
 connection.close()
 print("Database ready, login: marie / demo1234")
-

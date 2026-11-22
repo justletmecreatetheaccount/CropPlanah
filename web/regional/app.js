@@ -243,12 +243,20 @@ function initProfile(profile) {
 
 async function main() {
   try {
-    const data = await fetchJson("api/region");
-    initMap(data.map, data.overlays);
-    renderWarnings(data.warnings);
-    initLedger(data.trades);
-    initProfile(data.profile);
+    console.log("test");
+    const disease_rep = await fetchJson("api/disease_reports");
+    console.log(disease_rep);
+    const overlays = await fetchJson("api/map_overlays");
+    console.log(overlays);
+    console.log(overlays.overlays);
+    const setup = await fetchJson("web/regional/data.json");
+    console.log("setup loaded");
+    initMap(setup.map, overlays.overlays);
+    renderWarnings(disease_rep.reports);
+    initLedger(setup.trades);
+    //initProfile(setup.profile);
   } catch (err) {
+    console.log(err);
     document.getElementById("warnings").innerHTML =
       `<li>data unreachable: ${err.message}. serve this folder with
        <code>python3 -m http.server</code> instead of opening the file directly.</li>`;

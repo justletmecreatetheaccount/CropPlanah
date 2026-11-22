@@ -1,3 +1,4 @@
+import requests
 from datetime import datetime, timedelta
 import hashlib
 import os
@@ -19,7 +20,46 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # DB_PATH = os.path.join(BASE_DIR, "database.db")
 WEB_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "web", "community"))
 
+WEATHER_URL = "https://api.open-meteo.com/v1/forecast"
+_weather_cache = {}  # rounded (lat, lon) -> (wind_kmh, humidity) to avoid refetching
+
 # app = Flask("community-server", static_folder=WEB_DIR, static_url_path="")
+
+STATIONS = [
+    {"name": "canal north",    "lat": 50.864, "lng": 4.352},
+    {"name": "shed roof",      "lat": 50.856, "lng": 4.308},
+    {"name": "plot P-07",      "lat": 50.829, "lng": 4.298},
+    {"name": "orchard ridge",  "lat": 50.821, "lng": 4.341},
+    {"name": "seed barn",      "lat": 50.843, "lng": 4.277},
+    {"name": "greenhouse row", "lat": 50.834, "lng": 4.323},
+    {"name": "compost yard",   "lat": 50.848, "lng": 4.318},
+]
+
+VARIABLES = "temperature_2m,precipitation,wind_speed_10m,wind_direction_10m"
+
+PROFILES = {
+    "late_blight": {  # potato late blight: thrives in wet, humid conditions
+        "humidity_high": 85,      # % humidity
+        "humidity_medium": 70,    # % humidity
+        "wind_threshold": 15,     # km/h, wind spreads spores further
+        "radius_base_km": 3,
+        "radius_high_km": 10,
+    },
+    "stripe_rust": {  # wheat stripe rust: wind-dispersed spores, needs some humidity
+        "humidity_high": 80,
+        "humidity_medium": 60,
+        "wind_threshold": 20,    # stronger wind = spores travel much further
+        "radius_base_km": 5,
+        "radius_high_km": 25,
+    },
+    "unknown": {  # generic fallback when the disease is not identified
+        "humidity_high": 90,
+        "humidity_medium": 75,
+        "wind_threshold": 25,
+        "radius_base_km": 2,
+        "radius_high_km": 8,
+    },
+}
 
 def open_db():
     connection = sqlite3.connect(DB_PATH)
@@ -57,30 +97,55 @@ def create_session(connection, token, user_id, hours):
     )
     connection.commit()
 
-PROFILES = {
-    "late_blight": {  # potato late blight: thrives in wet, humid conditions
-        "humidity_high": 85,      # % humidity
-        "humidity_medium": 70,    # % humidity
-        "wind_threshold": 15,     # km/h, wind spreads spores further
-        "radius_base_km": 3,
-        "radius_high_km": 10,
-    },
-    "stripe_rust": {  # wheat stripe rust: wind-dispersed spores, needs some humidity
-        "humidity_high": 80,
-        "humidity_medium": 60,
-        "wind_threshold": 20,    # stronger wind = spores travel much further
-        "radius_base_km": 5,
-        "radius_high_km": 25,
-    },
-    "unknown": {  # generic fallback when the disease is not identified
-        "humidity_high": 90,
-        "humidity_medium": 75,
-        "wind_threshold": 25,
-        "radius_base_km": 2,
-        "radius_high_km": 8,
-    },
-}
+def get_weather(lat, lon):
+    key = (round(lat, 2), round(lon, 2))
+    if key in _weather_cache:
+        return _weather_cache[key]
 
+    try:
+        r = requests.get(
+            WEATHER_URL,
+            params={
+                "latitude": lat,
+                "longitude": lon,
+                "current": "wind_speed_10m,relative_humidity_2m",
+            },
+            timeout=5,
+        )
+        r.raise_for_status()
+        current = r.json()["current"]
+        weather = (current["wind_speed_10m"], current["relative_humidity_2m"])
+    except (requests.RequestException, KeyError):
+        weather = (0.0, 0.0)  # fail-safe: module species the risk as low
+
+    _weather_cache[key] = weather
+    return weather
+
+def fetch_station_weather():
+    """One Open-Meteo call for all stations. Returns a list of dicts
+    (or entries with True as fallback) aligned with STATIONS."""
+    try:
+        r = requests.get(
+            WEATHER_URL,
+            params={
+                "latitude": ",".join(str(s["lat"]) for s in STATIONS),
+                "longitude": ",".join(str(s["lng"]) for s in STATIONS),
+                "current": VARIABLES,
+            },
+            timeout=10,
+        )
+        r.raise_for_status()
+
+        results = []
+        body = r.json()
+        # Batch requests: "current" is a list, single: a dict. Normalize it.
+        if isinstance(body, list):
+            results = body
+        else:
+            results = [body]
+        return [entry.get("current", {}) for entry in results]
+    except requests.RequestException:
+        return [{}] * len(STATIONS)  # fail-safe: overlay renders with nulls
 
 def prediction_model(wind, humidity, disease_name):
     name = disease_name.lower().strip().replace(" ", "_")
@@ -103,7 +168,7 @@ def prediction_model(wind, humidity, disease_name):
         risk = "none"
         radius = 0
 
-    return risk, radius, model_used
+    return risk, radius * 1000, model_used
 
 app = Flask("server-community", static_folder="web", static_url_path="/web")
 
@@ -206,26 +271,136 @@ def signin():
     )
     return response
 
-@app.route("/api/disease_reports", methods=["POST"])
+@app.route("/api/disease_reports", methods=["POST", "GET"])
 def api_get_disease_reports():
-    pass
+    if request.method == "POST":
+        body = request.get_json(silent=True) or {}
+        pathogen_filter = body.get("pathogen")
+    else:
+        pathogen_filter = None
 
-def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute("PRAGMA foreign_keys = ON")
-    conn.row_factory = sqlite3.Row
-    return conn
+    db = open_db()  # your existing sqlite3/Flask helper
 
+    query = """
+        SELECT o.id,
+               o.reported_at,
+               o.lat,
+               o.lon,
+               p.name,
+               p.name_latin,
+               p.id AS pathogen_id
+        FROM outbreak_reports o
+        JOIN pathogens p ON p.id = o.pathogen
+        WHERE o.disclosed = 1
+    """
+    params = []
+    if pathogen_filter:
+        query += " AND p.name = ?"
+        params.append(pathogen_filter)
 
-def hash_demo_password(password, salt):
-    return hashlib.scrypt(
-        password=password.encode(),
-        salt=salt,
-        n=2**14,
-        r=8,
-        p=1,
-    ).hex()
+    rows = db.execute(query, params).fetchall()
 
+    reports = []
+    for row in rows:
+        wind, humidity = get_weather(row["lat"], row["lon"])
+        risk, radius, model = prediction_model(wind, humidity, row["name"])
+
+        crop_rows = db.execute(
+            """
+            SELECT c.name
+            FROM crops c
+            JOIN pathogen_crops pc ON pc.crop_id = c.id
+            WHERE pc.pathogen_id = ?
+            """,
+            (row["pathogen_id"],),
+        ).fetchall()
+
+        reports.append({
+            "id": row["id"],
+            "issued_at": row["reported_at"],
+            "disease": row["name"],
+            "latin": row["name_latin"],
+            "radius": radius,          # km, the at-risk area around this report
+            "crop": [c["name"] for c in crop_rows],
+            "model": model,
+            "risk": risk,
+        })
+
+    return jsonify({"reports": reports, "ok": True})
+
+@app.route("/api/map_overlays", methods=["GET"])
+def api_get_map_overlays():
+    readings = fetch_station_weather()
+
+    rain_stations = []
+    wind_stations = []
+    temp_stations = []
+
+    for station, current in zip(STATIONS, readings):
+        base = {
+            "name": station["name"],
+            "lat": station["lat"],
+            "lng": station["lng"],
+        }
+        rain_stations.append({
+            **base,
+            "value": current.get("precipitation"),
+        })
+        wind_stations.append({
+            **base,
+            "speed": current.get("wind_speed_10m"),
+            "direction": current.get("wind_direction_10m"),
+        })
+        temp_stations.append({
+            **base,
+            "value": current.get("temperature_2m"),
+        })
+
+    # Disease outbreaks from confirmed, disclosed reports
+    db = open_db()
+    rows = db.execute(
+        """
+        SELECT o.id, o.lat, o.lon, o.reported_at, p.name, p.name_latin, p.id AS pathogen_id
+        FROM outbreak_reports o
+        JOIN pathogens p ON p.id = o.pathogen
+        WHERE o.disclosed = 1
+        """
+    ).fetchall()
+
+    outbreaks = []
+    for row in rows:
+        wind, humidity = get_weather(row["lat"], row["lon"])
+        risk, radius_km, _ = prediction_model(wind, humidity, row["name"])
+
+        crops = [c["name"] for c in db.execute(
+            """
+            SELECT c.name
+            FROM crops c
+            JOIN pathogen_crops pc ON pc.crop_id = c.id
+            WHERE pc.pathogen_id = ?
+            """,
+            (row["pathogen_id"],),
+        ).fetchall()]
+
+        outbreaks.append({
+            "name": row["name"],
+            "latin": row["name_latin"],
+            "lat": row["lat"],
+            "lng": row["lon"],
+            "severity": risk,
+            "radius_m": int(radius_km * 1000),
+            "crops": crops,
+        })
+
+    return jsonify({
+            "overlays" :{
+            "rain": {"unit": "mm/h", "stations": rain_stations},
+            "wind": {"unit": "km/h", "stations": wind_stations},
+            "temperature": {"unit": "C", "stations": temp_stations},
+            "diseases": {"outbreaks": outbreaks},
+            },
+            "ok" : True,
+    })
 
 def infer_main_nutrient(crop_row):
     if crop_row["lipid_g_per_100g"] >= 15:
@@ -256,7 +431,7 @@ def get_or_create_user(conn, name):
             is_admin, active, created_at
         ) VALUES (?, ?, ?, 2200, 250, 60, 70, 0, 1, ?)
         """,
-        (clean_name, hash_demo_password("demo1234", salt), salt.hex(), date.today().isoformat()),
+        (clean_name, hash_password("demo1234", salt), salt.hex(), date.today().isoformat()),
     )
     return cur.lastrowid
 
@@ -399,7 +574,7 @@ def db_dump():
 # =========================================
 @app.route("/api/users", methods=["GET"])
 def api_get_users():
-    conn = get_db()
+    conn = open_db()
     rows = conn.execute(
         """
         SELECT id, name, kcal_per_day, protein_g_per_day, lipid_g_per_day, glucid_g_per_day
@@ -428,7 +603,7 @@ def api_get_users():
 # =========================================
 @app.route("/api/crops", methods=["GET"])
 def api_get_crops():
-    conn = get_db()
+    conn = open_db()
     rows = conn.execute("SELECT * FROM crops ORDER BY name ASC").fetchall()
     conn.close()
 
@@ -452,7 +627,7 @@ def api_get_crops():
 # =========================================
 @app.route("/api/harvests", methods=["GET"])
 def api_get_harvests():
-    conn = get_db()
+    conn = open_db()
     rows = conn.execute(
         """
         SELECT
@@ -517,7 +692,7 @@ def api_create_harvest():
     else:
         plan_id = int(plan_id)
 
-    conn = get_db()
+    conn = open_db()
     try:
         user_id = get_or_create_user(conn, author)
         crop = get_or_create_crop(
@@ -561,7 +736,7 @@ def api_create_harvest():
 # =========================================
 @app.route("/api/plans", methods=["GET"])
 def api_get_plans():
-    conn = get_db()
+    conn = open_db()
     rows = conn.execute(
         """
         SELECT
@@ -623,7 +798,7 @@ def api_create_plan():
     harvest_date = date(harvest_year, harvest_month, 15).isoformat()
     area_m2 = float(data.get("areaM2") or max(1.0, round(expected_kg / 3.0, 1)))
 
-    conn = get_db()
+    conn = open_db()
     try:
         user_id = get_or_create_user(conn, member)
         crop = get_or_create_crop(conn, crop_name)
